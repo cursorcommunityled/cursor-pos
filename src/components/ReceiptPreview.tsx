@@ -3,6 +3,7 @@
 import Image from "next/image";
 import QRCode from "react-qr-code";
 
+import { LOGO_SRC, getLogoPreviewSize } from "@/lib/logo-image";
 import type { ReceiptData } from "@/lib/types";
 
 function formatTimestamp(date = new Date()): string {
@@ -19,7 +20,8 @@ interface ReceiptPreviewProps {
 }
 
 export function ReceiptPreview({ data }: ReceiptPreviewProps) {
-  const widthClass = data.paperWidth === 58 ? "w-[220px]" : "w-[300px]";
+  const widthClass = data.paperWidth === 58 ? "w-[260px]" : "w-[340px]";
+  const logoSize = getLogoPreviewSize(data.paperWidth);
 
   return (
     <div className="flex flex-col items-center">
@@ -31,16 +33,17 @@ export function ReceiptPreview({ data }: ReceiptPreviewProps) {
       >
         <div className="flex flex-col items-center text-center">
           <Image
-            src="/logo.svg"
-            alt="Logo"
-            width={72}
-            height={72}
-            className="mb-3"
+            src={LOGO_SRC}
+            alt="Logo Cursor"
+            width={logoSize.width}
+            height={logoSize.height}
+            className="mb-4"
+            priority
           />
           <p className="mb-4 text-xs font-semibold">{data.businessName}</p>
 
           <div className="mb-4 rounded bg-white p-2">
-            <QRCode value={data.qrContent || " "} size={data.paperWidth === 58 ? 120 : 160} />
+            <QRCode value={data.qrContent || " "} size={data.paperWidth === 58 ? 132 : 176} />
           </div>
 
           <p>{data.eventType}</p>
