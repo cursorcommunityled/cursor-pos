@@ -1,7 +1,8 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["@point-of-sale/receipt-printer-encoder"],
 };
 
 export default nextConfig;
