@@ -1,5 +1,6 @@
 import ReceiptPrinterEncoder from "@point-of-sale/receipt-printer-encoder";
 
+import { getLogoPrintSize, loadLogoImage } from "./logo-image";
 import type { ReceiptData } from "./types";
 
 export interface ReceiptEncoderOptions {
@@ -20,29 +21,52 @@ function formatTimestamp(date = new Date()): string {
   return `${day}/${month} ${hours}:${minutes}`;
 }
 
-export function buildReceiptBuffer(
-  data: ReceiptData,
-  encoderOptions?: ReceiptEncoderOptions,
-): Uint8Array {
-  const width = columnsForWidth(data.paperWidth);
-  const timestamp = formatTimestamp();
-
+function createEncoder(encoderOptions?: ReceiptEncoderOptions, width?: number) {
   const encoderConfig: {
     language: string;
     width: number;
     codepageMapping?: string;
   } = {
     language: encoderOptions?.language ?? "esc-pos",
-    width,
+    width: width ?? 32,
   };
 
   if (encoderOptions?.codepageMapping) {
     encoderConfig.codepageMapping = encoderOptions.codepageMapping;
   }
 
-  const encoder = new ReceiptPrinterEncoder(encoderConfig);
+  return new ReceiptPrinterEncoder(encoderConfig);
+}
 
-  encoder.initialize().align("center").bold(true).line(data.businessName).bold(false);
+async function appendLogo(
+  encoder: ReceiptPrinterEncoder,
+  paperWidth: ReceiptData["paperWidth"],
+): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const logo = await loadLogoImage();
+    const size = getLogoPrintSize(paperWidth);
+    encoder.align("center").image(logo, size.width, size.height, "floydsteinberg").newline();
+  } catch {
+    // Si el logo no carga, continuar sin bloquear la impresión.
+  }
+}
+
+export async function buildReceiptBuffer(
+  data: ReceiptData,
+  encoderOptions?: ReceiptEncoderOptions,
+): Promise<Uint8Array> {
+  const width = columnsForWidth(data.paperWidth);
+  const timestamp = formatTimestamp();
+  const encoder = createEncoder(encoderOptions, width);
+
+  encoder.initialize().align("center");
+  await appendLogo(encoder, data.paperWidth);
+
+  encoder.bold(true).line(data.businessName).bold(false);
 
   encoder
     .newline()
@@ -53,7 +77,13 @@ export function buildReceiptBuffer(
     })
     .newline();
 
-  encoder.align("center").line(data.eventType).line(data.actionLabel).line(timestamp);
+  encoder.align("center").line(data.eventType).line(data.actionLabel);
+
+  if (data.nombre.trim()) {
+    encoder.line(data.nombre.trim());
+  }
+
+  encoder.line(timestamp);
 
   if (data.showWifi) {
     encoder

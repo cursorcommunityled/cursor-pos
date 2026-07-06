@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const buffer = buildReceiptBuffer(body.receipt);
+    const buffer = await buildReceiptBuffer(body.receipt);
 
     if (body.downloadOnly) {
       return new NextResponse(Buffer.from(buffer), {

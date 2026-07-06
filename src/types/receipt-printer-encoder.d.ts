@@ -19,6 +19,13 @@ declare module "@point-of-sale/receipt-printer-encoder" {
     line(text: string): this;
     text(text: string): this;
     newline(count?: number): this;
+    image(
+      input: HTMLImageElement,
+      width: number,
+      height: number,
+      algorithm?: string,
+      threshold?: number,
+    ): this;
     qrcode(value: string, options?: QrCodeOptions): this;
     cut(): this;
     encode(): Uint8Array;
