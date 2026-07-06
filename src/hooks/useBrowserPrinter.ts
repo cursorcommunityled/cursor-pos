@@ -11,18 +11,7 @@ import {
   type PrinterTransport,
   type StoredPrinterDevice,
 } from "@/lib/browser-printer";
-
-type PrinterInstance = {
-  connect: () => Promise<void>;
-  reconnect: (device: {
-    vendorId?: number | null;
-    productId?: number | null;
-    serialNumber?: string;
-  }) => Promise<void>;
-  disconnect: () => Promise<void>;
-  print: (data: Uint8Array) => Promise<void>;
-  addEventListener: (event: string, listener: (device?: StoredPrinterDevice) => void) => void;
-};
+import { BrowserReceiptPrinter } from "@/lib/web-printer-driver";
 
 interface UseBrowserPrinterResult {
   support: BrowserPrinterSupport;
@@ -36,63 +25,20 @@ interface UseBrowserPrinterResult {
   print: (data: Uint8Array) => Promise<void>;
 }
 
-function buildDeviceLabel(
-  transport: PrinterTransport,
-  info: Partial<StoredPrinterDevice>,
-): string {
-  if (info.productName || info.manufacturerName) {
-    return [info.manufacturerName, info.productName].filter(Boolean).join(" ");
-  }
-
-  if (info.vendorId && info.productId) {
-    return `${transport.toUpperCase()} ${info.vendorId}:${info.productId}`;
-  }
-
-  return transport === "serial" ? "Impresora Serial" : "Impresora USB";
-}
-
 export function useBrowserPrinter(): UseBrowserPrinterResult {
   const [support] = useState<BrowserPrinterSupport>(() => getBrowserPrinterSupport());
   const [device, setDevice] = useState<StoredPrinterDevice | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
-  const [baudRate, setBaudRate] = useState(9600);
+  const [baudRate, setBaudRate] = useState(115200);
 
-  const printerRef = useRef<PrinterInstance | null>(null);
-  const transportRef = useRef<PrinterTransport | null>(null);
+  const printerRef = useRef<BrowserReceiptPrinter | null>(null);
 
-  const createPrinter = useCallback(async (transport: PrinterTransport) => {
-    if (transport === "serial") {
-      const { default: WebSerialReceiptPrinter } = await import(
-        "@/vendor/webserial-receipt-printer.js"
-      );
-      return new WebSerialReceiptPrinter({ baudRate }) as PrinterInstance;
-    }
-
-    const { default: WebUSBReceiptPrinter } = await import("@/vendor/webusb-receipt-printer.js");
-    return new WebUSBReceiptPrinter() as PrinterInstance;
-  }, [baudRate]);
-
-  const bindPrinterEvents = useCallback(
-    (printer: PrinterInstance, transport: PrinterTransport, onConnected?: () => void) => {
+  const bindPrinter = useCallback(
+    (printer: BrowserReceiptPrinter) => {
       printer.addEventListener("connected", (info) => {
-        onConnected?.();
-
-        const stored: StoredPrinterDevice = {
-          transport,
-          vendorId: info?.vendorId ?? null,
-          productId: info?.productId ?? null,
-          serialNumber: info?.serialNumber,
-          manufacturerName: info?.manufacturerName,
-          productName: info?.productName,
-          language: info?.language ?? "esc-pos",
-          codepageMapping: info?.codepageMapping ?? null,
-          baudRate: transport === "serial" ? baudRate : undefined,
-          label: buildDeviceLabel(transport, info ?? {}),
-        };
-
-        saveStoredPrinter(stored);
-        setDevice(stored);
+        saveStoredPrinter(info);
+        setDevice(info);
         setIsConnected(true);
         setIsConnecting(false);
       });
@@ -101,14 +47,19 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
         setIsConnected(false);
         setDevice(null);
         printerRef.current = null;
-        transportRef.current = null;
       });
     },
-    [baudRate],
+    [],
   );
 
   const connect = useCallback(
     async (transport: PrinterTransport) => {
+      if (transport === "usb" && support.isWindows) {
+        throw new Error(
+          "En Windows, USB directo no funciona porque el driver bloquea la impresora. Usa Conectar Serial.",
+        );
+      }
+
       setIsConnecting(true);
 
       try {
@@ -116,28 +67,31 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
           await printerRef.current.disconnect();
         }
 
-        const printer = await createPrinter(transport);
-        let didConnect = false;
-
+        const printer = new BrowserReceiptPrinter();
         printerRef.current = printer;
-        transportRef.current = transport;
-        bindPrinterEvents(printer, transport, () => {
-          didConnect = true;
-        });
+        bindPrinter(printer);
 
-        await printer.connect();
-        await new Promise((resolve) => setTimeout(resolve, 400));
-
-        if (!didConnect) {
-          setIsConnecting(false);
-          throw new Error("No se seleccionó ninguna impresora.");
+        if (transport === "serial") {
+          await printer.connectSerial({ baudRate });
+          return;
         }
+
+        await printer.connectUsb();
       } catch (error) {
         setIsConnecting(false);
+
+        if (error instanceof DOMException && error.name === "NotFoundError") {
+          throw new Error(
+            transport === "serial"
+              ? "No apareció ningún puerto serial. Habilita el puerto COM virtual en el driver de la impresora."
+              : "No apareció ninguna impresora USB compatible.",
+          );
+        }
+
         throw error;
       }
     },
-    [bindPrinterEvents, createPrinter],
+    [baudRate, bindPrinter, support.isWindows],
   );
 
   const disconnect = useCallback(async () => {
@@ -149,7 +103,6 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
     setDevice(null);
     setIsConnected(false);
     printerRef.current = null;
-    transportRef.current = null;
   }, []);
 
   const print = useCallback(async (data: Uint8Array) => {
@@ -167,18 +120,22 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
       return;
     }
 
-    setBaudRate(stored.baudRate ?? 9600);
+    setBaudRate(stored.baudRate ?? 115200);
 
     void (async () => {
       try {
         setIsConnecting(true);
-        const printer = await createPrinter(stored.transport);
+        const printer = new BrowserReceiptPrinter();
         printerRef.current = printer;
-        transportRef.current = stored.transport;
-        bindPrinterEvents(printer, stored.transport);
-        await printer.reconnect(stored);
-        setDevice(stored);
-        setIsConnected(true);
+        bindPrinter(printer);
+
+        if (stored.transport === "serial") {
+          await printer.reconnectSerial(stored, { baudRate: stored.baudRate ?? 115200 });
+        } else if (!support.isWindows) {
+          await printer.reconnectUsb(stored);
+        } else {
+          clearStoredPrinter();
+        }
       } catch {
         clearStoredPrinter();
         setDevice(null);
@@ -187,7 +144,7 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
         setIsConnecting(false);
       }
     })();
-  }, [bindPrinterEvents, createPrinter]);
+  }, [bindPrinter, support.isWindows]);
 
   return {
     support,

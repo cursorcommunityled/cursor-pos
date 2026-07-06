@@ -4,7 +4,6 @@ import {
   Cable,
   Download,
   LoaderCircle,
-  Plug,
   PlugZap,
   Printer,
   Unplug,
@@ -121,10 +120,22 @@ export function PosApp() {
         </div>
 
         <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
-          <p className="font-medium">Impresión desde el navegador</p>
+          <p className="font-medium">
+            {support.isWindows ? "En Windows usa Conectar Serial" : "Impresión desde el navegador"}
+          </p>
           <p className="mt-1">
-            Usa Chrome o Edge. En Windows, prueba primero <strong>Conectar Serial</strong> si tu
-            impresora crea un puerto COM virtual.
+            {support.isWindows ? (
+              <>
+                El botón USB no funciona en Windows porque el driver bloquea la impresora. Pulsa{" "}
+                <strong>Conectar Serial</strong> y elige el puerto COM de tu impresora en el
+                diálogo de Chrome.
+              </>
+            ) : (
+              <>
+                Usa Chrome o Edge. Prueba <strong>Conectar Serial</strong> o{" "}
+                <strong>Conectar USB</strong> según tu impresora.
+              </>
+            )}
           </p>
         </div>
 
@@ -191,11 +202,18 @@ export function PosApp() {
             <button
               type="button"
               onClick={() => void handleConnect("usb")}
-              disabled={!support.usb || isConnecting || isConnected}
+              disabled={
+                !support.usb || support.isWindows || isConnecting || isConnected
+              }
+              title={
+                support.isWindows
+                  ? "En Windows el driver bloquea WebUSB. Usa Conectar Serial."
+                  : undefined
+              }
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <PlugZap className="h-4 w-4" />
-              Conectar USB
+              {support.isWindows ? "USB no disponible" : "Conectar USB"}
             </button>
           </div>
 
@@ -288,8 +306,19 @@ export function PosApp() {
         ) : null}
 
         <p className="mt-4 text-xs leading-5 text-zinc-500">
-          Si no aparece la impresora, habilita el puerto virtual COM en el driver o prueba otra
-          velocidad serial. En algunos modelos USB en Windows puede hacer falta WinUSB con Zadig.
+          {support.isWindows ? (
+            <>
+              Si Serial no muestra puertos: abre el Administrador de dispositivos y busca un puerto
+              COM. Si no existe, instala el driver de la impresora y activa &quot;USB Serial Port&quot;
+              o &quot;Virtual COM&quot; en las propiedades del driver. Prueba 115200 baud si 9600 no
+              imprime.
+            </>
+          ) : (
+            <>
+              Si no aparece la impresora, habilita el puerto virtual COM en el driver o prueba otra
+              velocidad serial.
+            </>
+          )}
         </p>
       </section>
 

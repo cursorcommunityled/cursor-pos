@@ -17,16 +17,20 @@ export interface BrowserPrinterSupport {
   serial: boolean;
   usb: boolean;
   secureContext: boolean;
+  isWindows: boolean;
 }
 
 const STORAGE_KEY = "cursor-pos-printer";
 
 export function getBrowserPrinterSupport(): BrowserPrinterSupport {
+  const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+
   return {
     serial: typeof navigator !== "undefined" && "serial" in navigator,
     usb: typeof navigator !== "undefined" && "usb" in navigator,
     secureContext:
       typeof window !== "undefined" ? window.isSecureContext : false,
+    isWindows: /Windows/i.test(userAgent),
   };
 }
 
