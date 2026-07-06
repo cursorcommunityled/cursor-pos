@@ -1,6 +1,8 @@
 import ReceiptPrinterEncoder from "@point-of-sale/receipt-printer-encoder";
 
 import { getLogoPrintSize, loadLogoCanvas } from "./logo-image";
+import { getQrPrintSize, loadQrCanvas } from "./qr-image";
+import { sanitizeForPrinter } from "./text-encoding";
 import type { ReceiptData } from "./types";
 
 export interface ReceiptEncoderOptions {
@@ -51,6 +53,27 @@ async function appendLogo(
   }
 }
 
+async function appendQr(
+  encoder: ReceiptPrinterEncoder,
+  content: string,
+  paperWidth: ReceiptData["paperWidth"],
+): Promise<void> {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const qr = await loadQrCanvas(content, paperWidth);
+    const size = getQrPrintSize(paperWidth);
+    encoder
+      .align("center")
+      .image(qr, size.width, size.height, "threshold", 128)
+      .newline();
+  } catch {
+    encoder.align("center").line(sanitizeForPrinter(content)).newline();
+  }
+}
+
 export async function buildReceiptBuffer(
   data: ReceiptData,
   encoderOptions?: ReceiptEncoderOptions,
@@ -59,24 +82,25 @@ export async function buildReceiptBuffer(
   const timestamp = formatTimestamp();
   const encoder = createEncoder(encoderOptions, width);
 
-  encoder.initialize().codepage("windows1252").align("center");
+  const businessName = sanitizeForPrinter(data.businessName);
+  const eventType = sanitizeForPrinter(data.eventType);
+  const actionLabel = sanitizeForPrinter(data.actionLabel);
+  const nombre = sanitizeForPrinter(data.nombre.trim());
+  const wifiSsid = sanitizeForPrinter(data.wifiSsid);
+  const wifiPassword = sanitizeForPrinter(data.wifiPassword);
+
+  encoder.initialize().align("center");
   await appendLogo(encoder, data.paperWidth);
 
-  encoder.bold(true).line(data.businessName).bold(false);
+  encoder.bold(true).line(businessName).bold(false);
 
-  encoder
-    .newline()
-    .qrcode(data.qrContent, {
-      model: 2,
-      size: data.paperWidth === 58 ? 6 : 8,
-      errorCorrection: "m",
-    })
-    .newline();
+  encoder.newline();
+  await appendQr(encoder, data.qrContent, data.paperWidth);
 
-  encoder.align("center").line(data.eventType).line(data.actionLabel);
+  encoder.align("center").line(eventType).line(actionLabel);
 
-  if (data.nombre.trim()) {
-    encoder.line(data.nombre.trim());
+  if (nombre) {
+    encoder.line(nombre);
   }
 
   encoder.line(timestamp);
@@ -88,8 +112,8 @@ export async function buildReceiptBuffer(
       .bold(true)
       .line("WiFi")
       .bold(false)
-      .line(`Red: ${data.wifiSsid}`)
-      .line(`Clave: ${data.wifiPassword}`);
+      .line(`Red: ${wifiSsid}`)
+      .line(`Clave: ${wifiPassword}`);
   }
 
   encoder.newline(3).cut();
