@@ -33,8 +33,8 @@ export function ReceiptPreview({ data }: ReceiptPreviewProps) {
           <Image
             src="/logo.svg"
             alt="Logo"
-            width={56}
-            height={56}
+            width={72}
+            height={72}
             className="mb-3"
           />
           <p className="mb-4 text-xs font-semibold">{data.businessName}</p>
@@ -45,6 +45,7 @@ export function ReceiptPreview({ data }: ReceiptPreviewProps) {
 
           <p>{data.eventType}</p>
           <p>{data.actionLabel}</p>
+          {data.nombre.trim() ? <p>{data.nombre.trim()}</p> : null}
           <p className="mb-4">{formatTimestamp()}</p>
 
           {data.showWifi ? (

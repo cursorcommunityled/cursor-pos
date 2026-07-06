@@ -2,6 +2,7 @@ export type PaperWidth = 58 | 80;
 
 export interface ReceiptData {
   businessName: string;
+  nombre: string;
   qrContent: string;
   eventType: string;
   actionLabel: string;
@@ -13,6 +14,7 @@ export interface ReceiptData {
 
 export const defaultReceiptData: ReceiptData = {
   businessName: "Cafe Cursor - Santiago",
+  nombre: "",
   qrContent: "https://cursor.com/events",
   eventType: "Drop-by slot",
   actionLabel: "Check-in",
