@@ -10,7 +10,7 @@ export function getQrPrintSize(paperWidth: 58 | 80): { width: number; height: nu
 }
 
 export function getQrPreviewSize(paperWidth: 58 | 80): number {
-  return paperWidth === 58 ? 156 : 208;
+  return paperWidth === 58 ? 240 : 320;
 }
 
 export async function loadQrCanvas(

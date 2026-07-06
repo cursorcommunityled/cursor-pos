@@ -1,5 +1,7 @@
 export type PaperWidth = 58 | 80;
 
+export type TicketMode = "event" | "photo";
+
 export interface ReceiptData {
   businessName: string;
   nombre: string;
@@ -10,6 +12,12 @@ export interface ReceiptData {
   wifiPassword: string;
   paperWidth: PaperWidth;
   showWifi: boolean;
+}
+
+export interface PhotoTicketData {
+  nombre: string;
+  paperWidth: PaperWidth;
+  photoDataUrl: string | null;
 }
 
 export const defaultReceiptData: ReceiptData = {
@@ -23,3 +31,17 @@ export const defaultReceiptData: ReceiptData = {
   paperWidth: 58,
   showWifi: true,
 };
+
+export const defaultPhotoTicketData: PhotoTicketData = {
+  nombre: "Juan Santamaría",
+  paperWidth: 58,
+  photoDataUrl: null,
+};
+
+export function getPreviewWidthClass(paperWidth: PaperWidth): string {
+  return paperWidth === 58 ? "w-[400px]" : "w-[520px]";
+}
+
+export function getPreviewShellClass(paperWidth: PaperWidth): string {
+  return `${getPreviewWidthClass(paperWidth)} rounded-sm bg-white px-8 py-9 font-mono text-[14px] leading-relaxed text-black shadow-[0_24px_80px_rgba(0,0,0,0.2)]`;
+}

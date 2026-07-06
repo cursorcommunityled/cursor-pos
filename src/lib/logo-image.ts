@@ -12,14 +12,23 @@ function toEscPosSize(width: number): { width: number; height: number } {
 }
 
 export function getLogoPreviewSize(paperWidth: 58 | 80): { width: number; height: number } {
-  return toEscPosSize(paperWidth === 58 ? 120 : 168);
+  return toEscPosSize(paperWidth === 58 ? 200 : 280);
 }
 
 export function getLogoPrintSize(paperWidth: 58 | 80): { width: number; height: number } {
   return toEscPosSize(paperWidth === 58 ? 176 : 256);
 }
 
-let cachedLogo: HTMLCanvasElement | null = null;
+export function getLogoPrintSizeSmall(paperWidth: 58 | 80): { width: number; height: number } {
+  return toEscPosSize(paperWidth === 58 ? 96 : 128);
+}
+
+export function getLogoPreviewSizeSmall(paperWidth: 58 | 80): { width: number; height: number } {
+  return toEscPosSize(paperWidth === 58 ? 80 : 104);
+}
+
+let cachedLogo: Map<number, HTMLCanvasElement> = new Map();
+let cachedLogoSmall: Map<number, HTMLCanvasElement> = new Map();
 
 async function renderLogoCanvas(
   width: number,
@@ -52,8 +61,9 @@ async function renderLogoCanvas(
 export async function loadLogoCanvas(
   paperWidth: 58 | 80,
 ): Promise<HTMLCanvasElement> {
-  if (cachedLogo) {
-    return cachedLogo;
+  const cached = cachedLogo.get(paperWidth);
+  if (cached) {
+    return cached;
   }
 
   if (typeof window === "undefined") {
@@ -61,10 +71,30 @@ export async function loadLogoCanvas(
   }
 
   const size = getLogoPrintSize(paperWidth);
-  cachedLogo = await renderLogoCanvas(size.width, size.height);
-  return cachedLogo;
+  const canvas = await renderLogoCanvas(size.width, size.height);
+  cachedLogo.set(paperWidth, canvas);
+  return canvas;
+}
+
+export async function loadLogoCanvasSmall(
+  paperWidth: 58 | 80,
+): Promise<HTMLCanvasElement> {
+  const cached = cachedLogoSmall.get(paperWidth);
+  if (cached) {
+    return cached;
+  }
+
+  if (typeof window === "undefined") {
+    throw new Error("El logo solo se puede cargar en el navegador.");
+  }
+
+  const size = getLogoPrintSizeSmall(paperWidth);
+  const canvas = await renderLogoCanvas(size.width, size.height);
+  cachedLogoSmall.set(paperWidth, canvas);
+  return canvas;
 }
 
 export function clearLogoCache(): void {
-  cachedLogo = null;
+  cachedLogo = new Map();
+  cachedLogoSmall = new Map();
 }

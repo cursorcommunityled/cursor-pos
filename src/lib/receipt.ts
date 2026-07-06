@@ -3,6 +3,7 @@ import ReceiptPrinterEncoder from "@point-of-sale/receipt-printer-encoder";
 import { getLogoPrintSize, loadLogoCanvas } from "./logo-image";
 import { getQrPrintSize, loadQrCanvas } from "./qr-image";
 import { sanitizeForPrinter } from "./text-encoding";
+import { formatTicketTimestamp } from "./timestamp";
 import type { ReceiptData } from "./types";
 
 export interface ReceiptEncoderOptions {
@@ -14,15 +15,6 @@ const DEFAULT_CODEPAGE_MAPPING = "pos-5890";
 
 function columnsForWidth(paperWidth: ReceiptData["paperWidth"]): number {
   return paperWidth === 58 ? 32 : 48;
-}
-
-function formatTimestamp(date = new Date()): string {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-
-  return `${day}/${month} ${hours}:${minutes}`;
 }
 
 function createEncoder(encoderOptions?: ReceiptEncoderOptions, width?: number) {
@@ -79,7 +71,7 @@ export async function buildReceiptBuffer(
   encoderOptions?: ReceiptEncoderOptions,
 ): Promise<Uint8Array> {
   const width = columnsForWidth(data.paperWidth);
-  const timestamp = formatTimestamp();
+  const timestamp = formatTicketTimestamp();
   const encoder = createEncoder(encoderOptions, width);
 
   const businessName = sanitizeForPrinter(data.businessName);
