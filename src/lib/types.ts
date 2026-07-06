@@ -13,9 +13,9 @@ export interface ReceiptData {
 }
 
 export const defaultReceiptData: ReceiptData = {
-  businessName: "Cafe Cursor - Santiago",
-  nombre: "",
-  qrContent: "https://cursor.com/events",
+  businessName: "Cursor Meetup - San José",
+  nombre: "Juan Santamaría",
+  qrContent: "https://luma.com/cursor-san-jose-costa-rica",
   eventType: "Drop-by slot",
   actionLabel: "Check-in",
   wifiSsid: "Taller.1",

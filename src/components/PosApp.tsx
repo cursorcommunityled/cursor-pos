@@ -21,9 +21,9 @@ import { type PaperWidth, defaultReceiptData, type ReceiptData } from "@/lib/typ
 type FieldKey = keyof ReceiptData;
 
 const textFields: Array<{ key: FieldKey; label: string; placeholder: string }> = [
-  { key: "businessName", label: "Nombre del negocio", placeholder: "Cafe Cursor - Santiago" },
-  { key: "nombre", label: "Nombre", placeholder: "Nombre del asistente" },
-  { key: "qrContent", label: "Contenido del QR", placeholder: "https://..." },
+  { key: "businessName", label: "Nombre del negocio", placeholder: "Cursor Meetup - San José" },
+  { key: "nombre", label: "Nombre", placeholder: "Juan Santamaría" },
+  { key: "qrContent", label: "Contenido del QR", placeholder: "https://luma.com/..." },
   { key: "eventType", label: "Tipo de evento", placeholder: "Drop-by slot" },
   { key: "actionLabel", label: "Acción", placeholder: "Check-in" },
   { key: "wifiSsid", label: "Red WiFi", placeholder: "Taller.1" },
