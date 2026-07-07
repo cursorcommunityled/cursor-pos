@@ -7,6 +7,7 @@ import {
   LoaderCircle,
   PlugZap,
   Printer,
+  QrCode,
   Save,
   Ticket,
   Unplug,
@@ -16,6 +17,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AppTopBar } from "@/components/AppTopBar";
 import { CameraCapture } from "@/components/CameraCapture";
 import { DocsFooterLink } from "@/components/DocsBackLink";
+import { LumaCheckin } from "@/components/LumaCheckin";
+import { LumaReceiptPreview } from "@/components/LumaReceiptPreview";
 import { PhotoReceiptPreview } from "@/components/PhotoReceiptPreview";
 import { ReceiptPreview } from "@/components/ReceiptPreview";
 import { useBrowserPrinter } from "@/hooks/useBrowserPrinter";
@@ -24,6 +27,7 @@ import { downloadReceiptBuffer } from "@/lib/browser-printer";
 import { buildPhotoReceiptBuffer } from "@/lib/photo-receipt";
 import { loadReceiptDefaults, saveReceiptDefaults } from "@/lib/receipt-defaults";
 import { buildReceiptBuffer } from "@/lib/receipt";
+import type { LumaGuestSummary } from "@/lib/luma/types";
 import {
   type PaperWidth,
   defaultPhotoTicketData,
@@ -40,6 +44,7 @@ export function PosApp() {
   const [mode, setMode] = useState<TicketMode>("event");
   const [receipt, setReceipt] = useState<ReceiptData>(defaultReceiptData);
   const [photoTicket, setPhotoTicket] = useState<PhotoTicketData>(defaultPhotoTicketData);
+  const [lumaPreviewGuest, setLumaPreviewGuest] = useState<LumaGuestSummary | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -190,6 +195,25 @@ export function PosApp() {
 
   const browserReady = support.secureContext && (support.serial || support.usb);
   const canPrintPhoto = mode !== "photo" || Boolean(photoTicket.photoDataUrl);
+  const encoderOptions = useMemo(
+    () => ({
+      language: device?.language ?? "esc-pos",
+      codepageMapping: device?.codepageMapping ?? "pos-5890",
+    }),
+    [device?.codepageMapping, device?.language],
+  );
+
+  const lumaPreviewData = useMemo(
+    () => ({
+      eventName: lumaPreviewGuest?.eventName ?? receipt.businessName,
+      guestName: lumaPreviewGuest?.name ?? receipt.nombre,
+      ticketName: lumaPreviewGuest?.ticketName ?? null,
+      checkinUrl: lumaPreviewGuest?.checkinUrl ?? receipt.qrContent,
+      paperWidth: receipt.paperWidth,
+      showTimestamp: receipt.showTimestamp,
+    }),
+    [lumaPreviewGuest, receipt.businessName, receipt.nombre, receipt.paperWidth, receipt.qrContent, receipt.showTimestamp],
+  );
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10">
@@ -197,7 +221,7 @@ export function PosApp() {
 
       <div className="mb-8 rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-4 shadow-sm sm:p-5">
         <p className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.ticketMode.label}</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
             type="button"
             onClick={() => setMode("event")}
@@ -221,6 +245,18 @@ export function PosApp() {
           >
             <Camera className="h-5 w-5" />
             {t.ticketMode.photo}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("luma")}
+            className={`inline-flex items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-base font-semibold transition ${
+              mode === "luma"
+                ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <QrCode className="h-5 w-5" />
+            {t.ticketMode.luma}
           </button>
         </div>
       </div>
@@ -380,7 +416,7 @@ export function PosApp() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : mode === "photo" ? (
           <div className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.name}</span>
@@ -442,32 +478,46 @@ export function PosApp() {
               }
             />
           </div>
+        ) : (
+          <LumaCheckin
+            isConnected={isConnected}
+            paperWidth={receipt.paperWidth}
+            showTimestamp={receipt.showTimestamp}
+            onPaperWidthChange={(value) => updateField("paperWidth", value)}
+            onShowTimestampChange={(value) => updateField("showTimestamp", value)}
+            printBuffer={print}
+            onStatus={setStatus}
+            onPreviewGuestChange={setLumaPreviewGuest}
+            encoderOptions={encoderOptions}
+          />
         )}
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => void handlePrint()}
-            disabled={isPrinting || !isConnected || !canPrintPhoto}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPrinting ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
-            ) : (
-              <Printer className="h-4 w-4" />
-            )}
-            {mode === "event" ? t.actions.printEvent : t.actions.printPhoto}
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleDownload()}
-            disabled={!canPrintPhoto}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <Download className="h-4 w-4" />
-            {t.actions.download}
-          </button>
-        </div>
+        {mode !== "luma" ? (
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => void handlePrint()}
+              disabled={isPrinting || !isConnected || !canPrintPhoto}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isPrinting ? (
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="h-4 w-4" />
+              )}
+              {mode === "event" ? t.actions.printEvent : t.actions.printPhoto}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDownload()}
+              disabled={!canPrintPhoto}
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Download className="h-4 w-4" />
+              {t.actions.download}
+            </button>
+          </div>
+        ) : null}
 
         {mode === "event" ? (
           <button
@@ -490,8 +540,10 @@ export function PosApp() {
       <aside className="flex min-w-0 flex-1 justify-center xl:sticky xl:top-10 xl:justify-center">
         {mode === "event" ? (
           <ReceiptPreview data={receipt} />
-        ) : (
+        ) : mode === "photo" ? (
           <PhotoReceiptPreview data={photoTicket} />
+        ) : (
+          <LumaReceiptPreview data={lumaPreviewData} />
         )}
       </aside>
       </div>

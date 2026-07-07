@@ -44,6 +44,12 @@ Printing runs **in the browser on each machine**. The Vercel deployment serves t
 - Name, extra line, timestamp, and Cursor logo on the ticket
 - Great for building a **photo wall / mural** after the event
 
+### Luma check-in
+- Scan guest QR codes from the device camera
+- Pull guest details from Luma via a server-side proxy
+- Auto-print a badge with name, ticket type, and check-in QR
+- Mark check-in in Luma and keep a live session log with reprint
+
 ### General
 - Large live preview (58 mm and 80 mm paper)
 - Direct print over Web Serial (ESC/POS)
@@ -92,6 +98,28 @@ npm run dev
 ```
 
 Open [http://localhost:3001](http://localhost:3001).
+
+### Luma integration
+
+There are two ways to use **Luma check-in**:
+
+#### Option A — Connect your calendar in the browser (quick)
+
+1. Open the **Luma check-in** tab
+2. Paste your calendar API key from [luma.com/calendar/manage/api-keys](https://luma.com/calendar/manage/api-keys)
+3. The key is stored in **sessionStorage** only (this tab). It is **not** saved on the Vercel server
+4. Each API call sends the key in a request header; the server forwards it to Luma and does not persist it
+
+**Security note:** on a shared deployment, your key still transits through that server on each request. For maximum security, use Option B.
+
+#### Option B — Fork and deploy your own instance (recommended)
+
+1. Fork [github.com/cursorcommunityled/cursor-pos](https://github.com/cursorcommunityled/cursor-pos)
+2. Deploy to your Vercel account
+3. Set `LUMA_API_KEY` in **Project Settings → Environment Variables**
+4. Use your own URL. The key stays on your server only; staff never paste keys in the browser
+
+Requires **Luma Plus**. Ticket and photo modes work without any Luma configuration.
 
 > **Note:** Port `3000` is often used by other local apps (e.g. OfferHub). This project uses **3001** by default to avoid conflicts.
 

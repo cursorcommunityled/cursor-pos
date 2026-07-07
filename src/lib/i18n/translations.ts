@@ -25,7 +25,7 @@ export type Translations = {
     repoBody: string;
     repoLinkLabel: string;
   };
-  ticketMode: { label: string; event: string; photo: string };
+  ticketMode: { label: string; event: string; photo: string; luma: string };
   app: {
     brand: string;
     title: string;
@@ -123,6 +123,62 @@ export type Translations = {
     printError: string;
     downloadError: string;
   };
+  luma: {
+    title: string;
+    subtitle: string;
+    eventLabel: string;
+    loadingEvents: string;
+    noEvents: string;
+    eventsLoadError: string;
+    selectEventFirst: string;
+    printerRequired: string;
+    scannerTitle: string;
+    scannerIdleHint: string;
+    scannerActiveHint: string;
+    scannerStoppedHint: string;
+    startScan: string;
+    stopScan: string;
+    processing: string;
+    invalidQr: string;
+    eventMismatch: string;
+    guestLoadError: string;
+    checkinError: string;
+    scanProcessError: string;
+    scannerStartError: string;
+    scannedSuccess: string;
+    scannedPrinted: string;
+    printedCheckinFailed: string;
+    reprinted: string;
+    printError: string;
+    logTitle: string;
+    logHint: string;
+    logEmpty: string;
+    reprint: string;
+    clearLog: string;
+    statusPrinted: string;
+    statusPrintFailed: string;
+    statusCheckedIn: string;
+    statusCheckinPending: string;
+    previewAction: string;
+    previewGuestPlaceholder: string;
+    previewEventPlaceholder: string;
+    connectTitle: string;
+    connectSubtitle: string;
+    connectKeyLabel: string;
+    connectKeyPlaceholder: string;
+    connectKeyRequired: string;
+    connectAction: string;
+    connectSaving: string;
+    connectFailed: string;
+    connectConnectedTitle: string;
+    connectConnectedHint: string;
+    connectDisconnect: string;
+    connectStorageHint: string;
+    connectSecurityTitle: string;
+    connectSecurityBody: string;
+    connectSecurityDeployHint: string;
+    serverCalendarHint: string;
+  };
 };
 
 export const translations: Record<Locale, Translations> = {
@@ -177,6 +233,7 @@ export const translations: Record<Locale, Translations> = {
       label: "Tipo de ticket",
       event: "Ticket de evento",
       photo: "Ticket con foto",
+      luma: "Check-in Luma",
     },
     app: {
       brand: "Cursor POS",
@@ -282,6 +339,68 @@ export const translations: Record<Locale, Translations> = {
       printError: "Error al imprimir.",
       downloadError: "Error al descargar.",
     },
+    luma: {
+      title: "Check-in con Luma",
+      subtitle: "Escanea el QR del invitado, imprime su gafete y marca el check-in en Luma.",
+      eventLabel: "Evento",
+      loadingEvents: "Cargando eventos...",
+      noEvents: "No hay eventos disponibles",
+      eventsLoadError: "No se pudieron cargar los eventos de Luma.",
+      selectEventFirst: "Selecciona un evento antes de escanear.",
+      printerRequired: "Conecta la impresora antes de escanear.",
+      scannerTitle: "Escaneo de QR",
+      scannerIdleHint: "Activa la camara para recibir invitados.",
+      scannerActiveHint: "Apunta al QR de Luma del invitado.",
+      scannerStoppedHint: "La camara se activa al iniciar el escaneo.",
+      startScan: "Iniciar escaneo",
+      stopScan: "Detener escaneo",
+      processing: "Procesando...",
+      invalidQr: "Ese codigo no parece un QR valido de Luma.",
+      eventMismatch: "El QR pertenece a otro evento distinto al seleccionado.",
+      guestLoadError: "No se pudo obtener la informacion del invitado.",
+      checkinError: "No se pudo marcar el check-in en Luma.",
+      scanProcessError: "No se pudo procesar el escaneo.",
+      scannerStartError: "No se pudo iniciar la camara para escanear.",
+      scannedSuccess: "Gafete impreso y check-in registrado.",
+      scannedPrinted: "Gafete impreso.",
+      printedCheckinFailed: "Gafete impreso, pero el check-in en Luma fallo.",
+      reprinted: "Gafete reimpreso.",
+      printError: "Error al reimprimir.",
+      logTitle: "Registro en vivo",
+      logHint: "Ultimos escaneos de esta sesion.",
+      logEmpty: "Todavia no hay escaneos.",
+      reprint: "Reimprimir",
+      clearLog: "Limpiar registro",
+      statusPrinted: "Impreso",
+      statusPrintFailed: "Sin imprimir",
+      statusCheckedIn: "Check-in ok",
+      statusCheckinPending: "Check-in pendiente",
+      previewAction: "Check-in",
+      previewGuestPlaceholder: "Nombre del invitado",
+      previewEventPlaceholder: "Nombre del evento",
+      connectTitle: "Conectar tu calendario Luma",
+      connectSubtitle:
+        "Pega la API key de tu calendario para ver tus eventos. La key se guarda solo en este navegador.",
+      connectKeyLabel: "API key de Luma",
+      connectKeyPlaceholder: "secret-...",
+      connectKeyRequired: "Ingresa tu API key de Luma.",
+      connectAction: "Conectar calendario",
+      connectSaving: "Conectando...",
+      connectFailed: "No se pudo conectar con esa API key.",
+      connectConnectedTitle: "Calendario conectado",
+      connectConnectedHint:
+        "Tu key vive solo en sessionStorage de este navegador. Se borra al cerrar la pestana.",
+      connectDisconnect: "Desconectar",
+      connectStorageHint:
+        "La key no se guarda en el servidor de Vercel. Solo se envia en cada request mientras uses esta pestana.",
+      connectSecurityTitle: "Seguridad",
+      connectSecurityBody:
+        "Al usar esta URL compartida, tu API key viaja por el navegador y el servidor de este despliegue en cada consulta. No la pegues en sitios en los que no confies.",
+      connectSecurityDeployHint:
+        "Para maxima seguridad, haz fork del repo y despliega tu propia instancia en Vercel con LUMA_API_KEY en variables de entorno. Asi la key nunca sale de tu proyecto.",
+      serverCalendarHint:
+        "Este despliegue usa una API key configurada en el servidor (ideal para la instancia oficial del organizador).",
+    },
   },
   en: {
     language: { label: "Language", es: "Español", en: "English" },
@@ -334,6 +453,7 @@ export const translations: Record<Locale, Translations> = {
       label: "Ticket type",
       event: "Event ticket",
       photo: "Photo ticket",
+      luma: "Luma check-in",
     },
     app: {
       brand: "Cursor POS",
@@ -437,6 +557,68 @@ export const translations: Record<Locale, Translations> = {
         "Could not open the serial port. Close other Cursor POS tabs, restart the printer, make sure it is on and paired, and that no other app is using the COM port.",
       printError: "Print error.",
       downloadError: "Download error.",
+    },
+    luma: {
+      title: "Luma check-in",
+      subtitle: "Scan each guest QR, print their badge, and mark check-in in Luma.",
+      eventLabel: "Event",
+      loadingEvents: "Loading events...",
+      noEvents: "No events available",
+      eventsLoadError: "Could not load Luma events.",
+      selectEventFirst: "Select an event before scanning.",
+      printerRequired: "Connect the printer before scanning.",
+      scannerTitle: "QR scanner",
+      scannerIdleHint: "Start the camera to receive guests.",
+      scannerActiveHint: "Point at the guest Luma QR code.",
+      scannerStoppedHint: "The camera starts when scanning begins.",
+      startScan: "Start scanning",
+      stopScan: "Stop scanning",
+      processing: "Processing...",
+      invalidQr: "That code does not look like a valid Luma QR.",
+      eventMismatch: "That QR belongs to a different event than the one selected.",
+      guestLoadError: "Could not load guest information.",
+      checkinError: "Could not mark check-in in Luma.",
+      scanProcessError: "Could not process the scan.",
+      scannerStartError: "Could not start the camera for scanning.",
+      scannedSuccess: "Badge printed and check-in recorded.",
+      scannedPrinted: "Badge printed.",
+      printedCheckinFailed: "Badge printed, but Luma check-in failed.",
+      reprinted: "Badge reprinted.",
+      printError: "Reprint error.",
+      logTitle: "Live log",
+      logHint: "Latest scans from this session.",
+      logEmpty: "No scans yet.",
+      reprint: "Reprint",
+      clearLog: "Clear log",
+      statusPrinted: "Printed",
+      statusPrintFailed: "Not printed",
+      statusCheckedIn: "Checked in",
+      statusCheckinPending: "Check-in pending",
+      previewAction: "Check-in",
+      previewGuestPlaceholder: "Guest name",
+      previewEventPlaceholder: "Event name",
+      connectTitle: "Connect your Luma calendar",
+      connectSubtitle:
+        "Paste your calendar API key to load your events. The key stays in this browser only.",
+      connectKeyLabel: "Luma API key",
+      connectKeyPlaceholder: "secret-...",
+      connectKeyRequired: "Enter your Luma API key.",
+      connectAction: "Connect calendar",
+      connectSaving: "Connecting...",
+      connectFailed: "Could not connect with that API key.",
+      connectConnectedTitle: "Calendar connected",
+      connectConnectedHint:
+        "Your key lives only in this browser sessionStorage. It clears when you close the tab.",
+      connectDisconnect: "Disconnect",
+      connectStorageHint:
+        "The key is not stored on the Vercel server. It is sent with each request only while this tab is open.",
+      connectSecurityTitle: "Security",
+      connectSecurityBody:
+        "On this shared URL, your API key passes through the browser and this deployment server on every request. Do not paste it on sites you do not trust.",
+      connectSecurityDeployHint:
+        "For maximum security, fork the repo and deploy your own Vercel instance with LUMA_API_KEY in environment variables. That way the key never leaves your project.",
+      serverCalendarHint:
+        "This deployment uses a server-side API key (best for the official organizer instance).",
     },
   },
 };
