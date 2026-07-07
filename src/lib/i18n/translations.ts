@@ -2,6 +2,7 @@ import type { Locale } from "./types";
 
 export type Translations = {
   language: { label: string; es: string; en: string };
+  theme: { label: string; light: string; dark: string };
   creator: { by: string };
   docs: {
     title: string;
@@ -127,6 +128,7 @@ export type Translations = {
 export const translations: Record<Locale, Translations> = {
   es: {
     language: { label: "Idioma", es: "Español", en: "English" },
+    theme: { label: "Tema", light: "Claro", dark: "Oscuro" },
     creator: { by: "Creado por" },
     docs: {
       title: "Documentacion",
@@ -283,6 +285,7 @@ export const translations: Record<Locale, Translations> = {
   },
   en: {
     language: { label: "Language", es: "Español", en: "English" },
+    theme: { label: "Theme", light: "Light", dark: "Dark" },
     creator: { by: "Created by" },
     docs: {
       title: "Documentation",

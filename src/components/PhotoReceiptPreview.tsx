@@ -21,7 +21,7 @@ export function PhotoReceiptPreview({ data }: PhotoReceiptPreviewProps) {
 
   return (
     <div className="flex w-full flex-col items-center">
-      <p className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-zinc-500">
+      <p className="mb-4 text-sm font-medium uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
         {t.app.preview}
       </p>
       <div className={shellClass}>

@@ -195,8 +195,8 @@ export function PosApp() {
     <div className="mx-auto w-full max-w-7xl px-6 py-10">
       <AppTopBar />
 
-      <div className="mb-8 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-        <p className="mb-3 text-sm font-medium text-zinc-700">{t.ticketMode.label}</p>
+      <div className="mb-8 rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-4 shadow-sm sm:p-5">
+        <p className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.ticketMode.label}</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             type="button"
@@ -204,7 +204,7 @@ export function PosApp() {
             className={`inline-flex items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-base font-semibold transition ${
               mode === "event"
                 ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
-                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
             }`}
           >
             <Ticket className="h-5 w-5" />
@@ -216,7 +216,7 @@ export function PosApp() {
             className={`inline-flex items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-base font-semibold transition ${
               mode === "photo"
                 ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
-                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
             }`}
           >
             <Camera className="h-5 w-5" />
@@ -226,26 +226,26 @@ export function PosApp() {
       </div>
 
       <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
-      <section className="w-full shrink-0 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm xl:w-[520px]">
+      <section className="w-full shrink-0 rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-6 shadow-sm xl:w-[520px]">
         <div className="mb-6">
-          <p className="text-sm font-medium text-zinc-500">{t.app.brand}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">{t.app.brand}</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {t.app.title}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">{t.app.subtitle}</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">{t.app.subtitle}</p>
         </div>
 
         {!browserReady ? (
-          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
             {t.browser.unsupported}
           </div>
         ) : null}
 
-        <div className="mb-6 space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+        <div className="mb-6 space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-zinc-800">{t.printer.title}</p>
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t.printer.title}</p>
+              <p className="text-sm text-zinc-600 dark:text-zinc-400">
                 {isConnecting
                   ? t.printer.connecting
                   : isConnected && device
@@ -257,7 +257,7 @@ export function PosApp() {
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 isConnected
                   ? "bg-emerald-100 text-emerald-800"
-                  : "bg-zinc-200 text-zinc-700"
+                  : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200"
               }`}
             >
               {isConnected ? t.printer.statusConnected : t.printer.statusDisconnected}
@@ -265,14 +265,14 @@ export function PosApp() {
           </div>
 
           <label className="block">
-            <span className="mb-1.5 block text-sm font-medium text-zinc-700">
+            <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
               {t.printer.baud}
             </span>
             <select
               value={baudRate}
               onChange={(event) => setBaudRate(Number(event.target.value))}
               disabled={isConnected}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 disabled:opacity-60"
+              className="w-full rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 disabled:opacity-60"
             >
               <option value={9600}>9600</option>
               <option value={19200}>19200</option>
@@ -302,7 +302,7 @@ export function PosApp() {
                 !support.usb || support.isWindows || isConnecting || isConnected
               }
               title={support.isWindows ? t.printer.usbWindowsHint : undefined}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <PlugZap className="h-4 w-4" />
               {support.isWindows ? t.printer.usbUnavailable : t.printer.connectUsb}
@@ -313,7 +313,7 @@ export function PosApp() {
             <button
               type="button"
               onClick={() => void handleDisconnect()}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               <Unplug className="h-4 w-4" />
               {t.printer.disconnect}
@@ -325,7 +325,7 @@ export function PosApp() {
           <div className="space-y-4">
             {textFields.map((field) => (
               <label key={field.key} className="block">
-                <span className="mb-1.5 block text-sm font-medium text-zinc-700">
+                <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   {field.label}
                 </span>
                 <input
@@ -338,20 +338,20 @@ export function PosApp() {
                       ? !receipt.showWifi
                       : false
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 focus:bg-white dark:focus:border-zinc-500 dark:focus:bg-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </label>
             ))}
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
+                <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.paperWidth}</span>
                 <select
                   value={receipt.paperWidth}
                   onChange={(event) =>
                     updateField("paperWidth", Number(event.target.value) as PaperWidth)
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 focus:bg-white dark:focus:border-zinc-500 dark:focus:bg-zinc-900"
                 >
                   <option value={58}>58 mm</option>
                   <option value={80}>80 mm</option>
@@ -359,23 +359,23 @@ export function PosApp() {
               </label>
 
               <div className="flex flex-col gap-3">
-                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3">
                   <input
                     type="checkbox"
                     checked={receipt.showTimestamp}
                     onChange={(event) => updateField("showTimestamp", event.target.checked)}
                     className="h-4 w-4 rounded border-zinc-300"
                   />
-                  <span className="text-sm font-medium text-zinc-700">{t.fields.includeTimestamp}</span>
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.includeTimestamp}</span>
                 </label>
-                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3">
                   <input
                     type="checkbox"
                     checked={receipt.showWifi}
                     onChange={(event) => updateField("showWifi", event.target.checked)}
                     className="h-4 w-4 rounded border-zinc-300"
                   />
-                  <span className="text-sm font-medium text-zinc-700">{t.fields.includeWifi}</span>
+                  <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.includeWifi}</span>
                 </label>
               </div>
             </div>
@@ -383,50 +383,50 @@ export function PosApp() {
         ) : (
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.name}</span>
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.name}</span>
               <input
                 type="text"
                 value={photoTicket.nombre}
                 placeholder={t.placeholders.nombre}
                 onChange={(event) => updatePhotoField("nombre", event.target.value)}
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 focus:bg-white dark:focus:border-zinc-500 dark:focus:bg-zinc-900"
               />
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.extra}</span>
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.extra}</span>
               <input
                 type="text"
                 value={photoTicket.extra}
                 placeholder={t.placeholders.extra}
                 onChange={(event) => updatePhotoField("extra", event.target.value)}
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 focus:bg-white dark:focus:border-zinc-500 dark:focus:bg-zinc-900"
               />
             </label>
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
+                <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.paperWidth}</span>
                 <select
                   value={photoTicket.paperWidth}
                   onChange={(event) =>
                     updatePhotoField("paperWidth", Number(event.target.value) as PaperWidth)
                   }
-                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-50 outline-none transition focus:border-zinc-400 focus:bg-white dark:focus:border-zinc-500 dark:focus:bg-zinc-900"
                 >
                   <option value={58}>58 mm</option>
                   <option value={80}>80 mm</option>
                 </select>
               </label>
 
-              <label className="flex items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+              <label className="flex items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3">
                 <input
                   type="checkbox"
                   checked={photoTicket.showTimestamp}
                   onChange={(event) => updatePhotoField("showTimestamp", event.target.checked)}
                   className="h-4 w-4 rounded border-zinc-300"
                 />
-                <span className="text-sm font-medium text-zinc-700">{t.fields.includeTimestamp}</span>
+                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.fields.includeTimestamp}</span>
               </label>
             </div>
 
@@ -462,7 +462,7 @@ export function PosApp() {
             type="button"
             onClick={() => void handleDownload()}
             disabled={!canPrintPhoto}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
             {t.actions.download}
@@ -473,7 +473,7 @@ export function PosApp() {
           <button
             type="button"
             onClick={handleSaveDefaults}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-100 dark:hover:bg-zinc-900"
           >
             <Save className="h-4 w-4" />
             {t.actions.saveDefaults}
@@ -481,10 +481,10 @@ export function PosApp() {
         ) : null}
 
         {status ? (
-          <p className="mt-4 rounded-xl bg-zinc-100 px-4 py-3 text-sm text-zinc-700">{status}</p>
+          <p className="mt-4 rounded-xl bg-zinc-100 px-4 py-3 text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200">{status}</p>
         ) : null}
 
-        <p className="mt-4 text-xs leading-5 text-zinc-500">{t.printer.footnote}</p>
+        <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t.printer.footnote}</p>
       </section>
 
       <aside className="flex min-w-0 flex-1 justify-center xl:sticky xl:top-10 xl:justify-center">

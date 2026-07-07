@@ -393,11 +393,11 @@ export function CameraCapture({
   const isCountingDown = countdown !== null;
 
   return (
-    <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+    <div className="space-y-3 rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-sm font-medium text-zinc-800">{t.camera.title}</p>
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t.camera.title}</p>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {isReviewing
               ? t.camera.hintReview
               : hasConfirmedPhoto
@@ -409,7 +409,7 @@ export function CameraCapture({
           <button
             type="button"
             onClick={clearPhoto}
-            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-700 transition hover:bg-zinc-100"
+            className="inline-flex items-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-3 py-2 text-sm text-zinc-700 dark:text-zinc-300 transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
           >
             <RotateCcw className="h-4 w-4" />
             {t.camera.change}
@@ -420,12 +420,12 @@ export function CameraCapture({
       {showCameraPicker ? (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <label className="block flex-1">
-            <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.camera.cameraLabel}</span>
+            <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.camera.cameraLabel}</span>
             <select
               value={selectedDeviceId}
               disabled={isSwitching || isCountingDown || cameras.length < 2}
               onChange={(event) => void switchCamera(event.target.value)}
-              className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-zinc-100 outline-none transition focus:border-zinc-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {cameras.map((camera) => (
                 <option key={camera.deviceId} value={camera.deviceId}>
@@ -439,7 +439,7 @@ export function CameraCapture({
               type="button"
               onClick={cycleCamera}
               disabled={isSwitching || isCountingDown}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 sm:shrink-0"
             >
               <RefreshCw className={`h-4 w-4 ${isSwitching ? "animate-spin" : ""}`} />
               {t.camera.switchCamera}
@@ -455,7 +455,7 @@ export function CameraCapture({
           onOffsetChange={handleOffsetChange}
         />
       ) : isActive ? (
-        <div className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-black ${photoFrameClass}`}>
+        <div className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-black dark:border-zinc-700 ${photoFrameClass}`}>
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
@@ -492,7 +492,7 @@ export function CameraCapture({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               <ImagePlus className="h-4 w-4" />
               {t.camera.upload}
@@ -515,7 +515,7 @@ export function CameraCapture({
               type="button"
               onClick={handleCancel}
               disabled={isSwitching}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isCountingDown ? t.camera.stop : t.camera.cancel}
             </button>
@@ -527,7 +527,7 @@ export function CameraCapture({
             <button
               type="button"
               onClick={() => void retakePhoto()}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
             >
               <RefreshCw className="h-4 w-4" />
               {t.camera.retake}
@@ -547,7 +547,7 @@ export function CameraCapture({
           <button
             type="button"
             onClick={() => void retakePhoto()}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900 px-4 py-3 text-sm font-medium text-zinc-800 dark:text-zinc-200 transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
           >
             <RefreshCw className="h-4 w-4" />
             {t.camera.retakePhoto}

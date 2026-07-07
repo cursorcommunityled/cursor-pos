@@ -151,7 +151,7 @@ export function PhotoFrameEditor({
     <div className="space-y-2">
       <div
         ref={frameRef}
-        className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-900 ${photoFrameClass} ${
+        className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-zinc-900 dark:border-zinc-700 ${photoFrameClass} ${
           canPan ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-default"
         } touch-none`}
         onPointerDown={handlePointerDown}
