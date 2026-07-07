@@ -91,7 +91,9 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3001](http://localhost:3001).
+
+> **Note:** Port `3000` is often used by other local apps (e.g. OfferHub). This project uses **3001** by default to avoid conflicts.
 
 ### Scripts
 

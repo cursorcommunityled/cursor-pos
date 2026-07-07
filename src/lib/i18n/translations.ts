@@ -63,6 +63,7 @@ export type Translations = {
     wifiPassword: string;
     paperWidth: string;
     includeWifi: string;
+    includeTimestamp: string;
     name: string;
   };
   placeholders: {
@@ -218,6 +219,7 @@ export const translations: Record<Locale, Translations> = {
       wifiPassword: "Clave WiFi",
       paperWidth: "Ancho de papel",
       includeWifi: "Incluir WiFi",
+      includeTimestamp: "Incluir fecha y hora",
       name: "Nombre",
     },
     placeholders: {
@@ -372,6 +374,7 @@ export const translations: Record<Locale, Translations> = {
       wifiPassword: "WiFi password",
       paperWidth: "Paper width",
       includeWifi: "Include WiFi",
+      includeTimestamp: "Include date and time",
       name: "Name",
     },
     placeholders: {

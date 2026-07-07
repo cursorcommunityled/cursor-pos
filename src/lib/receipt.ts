@@ -100,7 +100,9 @@ export async function buildReceiptBuffer(
     encoder.line(extra);
   }
 
-  encoder.line(timestamp);
+  if (data.showTimestamp) {
+    encoder.line(timestamp);
+  }
 
   if (data.showWifi) {
     encoder

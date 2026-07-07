@@ -52,7 +52,11 @@ export async function buildPhotoReceiptBuffer(
     encoder.line(extra);
   }
 
-  encoder.newline().line(timestamp).newline(2);
+  if (data.showTimestamp) {
+    encoder.newline().line(timestamp);
+  }
+
+  encoder.newline(2);
 
   const logoSize = getLogoPrintSizeSmall(data.paperWidth);
   const logo = await loadLogoCanvasSmall(data.paperWidth);

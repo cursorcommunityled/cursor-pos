@@ -43,7 +43,7 @@ export function ReceiptPreview({ data }: ReceiptPreviewProps) {
           <p>{data.actionLabel}</p>
           {data.nombre.trim() ? <p>{data.nombre.trim()}</p> : null}
           {data.extra.trim() ? <p>{data.extra.trim()}</p> : null}
-          <p className="mb-4">{formatTicketTimestamp()}</p>
+          {data.showTimestamp ? <p className="mb-4">{formatTicketTimestamp()}</p> : null}
 
           {data.showWifi ? (
             <div>

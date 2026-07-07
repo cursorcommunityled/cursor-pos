@@ -53,7 +53,9 @@ export function PhotoReceiptPreview({ data }: PhotoReceiptPreviewProps) {
           {data.extra.trim() ? (
             <p className="mb-1 text-sm text-zinc-700">{data.extra.trim()}</p>
           ) : null}
-          <p className="mb-5 text-sm text-zinc-700">{formatTicketTimestamp()}</p>
+          {data.showTimestamp ? (
+            <p className="mb-5 text-sm text-zinc-700">{formatTicketTimestamp()}</p>
+          ) : null}
 
           <Image
             src={LOGO_SRC}

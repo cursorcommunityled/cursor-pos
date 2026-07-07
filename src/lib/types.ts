@@ -16,6 +16,7 @@ export interface ReceiptData {
   wifiPassword: string;
   paperWidth: PaperWidth;
   showWifi: boolean;
+  showTimestamp: boolean;
 }
 
 export interface PhotoTicketData {
@@ -25,6 +26,7 @@ export interface PhotoTicketData {
   photoSourceDataUrl: string | null;
   photoFrameOffset: PhotoFrameOffset;
   photoDataUrl: string | null;
+  showTimestamp: boolean;
 }
 
 export const defaultReceiptData: ReceiptData = {
@@ -38,6 +40,7 @@ export const defaultReceiptData: ReceiptData = {
   wifiPassword: "@Salvo20",
   paperWidth: 58,
   showWifi: true,
+  showTimestamp: true,
 };
 
 export const defaultPhotoTicketData: PhotoTicketData = {
@@ -47,6 +50,7 @@ export const defaultPhotoTicketData: PhotoTicketData = {
   photoSourceDataUrl: null,
   photoFrameOffset: DEFAULT_PHOTO_FRAME_OFFSET,
   photoDataUrl: null,
+  showTimestamp: true,
 };
 
 export function getPreviewWidthClass(paperWidth: PaperWidth): string {

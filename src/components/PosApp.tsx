@@ -78,18 +78,20 @@ export function PosApp() {
       nombre: saved.nombre,
       extra: saved.extra,
       paperWidth: saved.paperWidth,
+      showTimestamp: saved.showTimestamp,
     }));
   }, []);
 
   function updateField<K extends FieldKey>(key: K, value: ReceiptData[K]) {
     setReceipt((current) => ({ ...current, [key]: value }));
 
-    if (key === "nombre" || key === "extra" || key === "paperWidth") {
+    if (key === "nombre" || key === "extra" || key === "paperWidth" || key === "showTimestamp") {
       setPhotoTicket((current) => ({
         ...current,
         ...(key === "nombre" ? { nombre: value as string } : {}),
         ...(key === "extra" ? { extra: value as string } : {}),
         ...(key === "paperWidth" ? { paperWidth: value as PaperWidth } : {}),
+        ...(key === "showTimestamp" ? { showTimestamp: value as boolean } : {}),
       }));
     }
   }
@@ -105,6 +107,9 @@ export function PosApp() {
     }
     if (key === "paperWidth") {
       setReceipt((current) => ({ ...current, paperWidth: value as PaperWidth }));
+    }
+    if (key === "showTimestamp") {
+      setReceipt((current) => ({ ...current, showTimestamp: value as boolean }));
     }
   }
 
@@ -353,15 +358,26 @@ export function PosApp() {
                 </select>
               </label>
 
-              <label className="flex items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
-                <input
-                  type="checkbox"
-                  checked={receipt.showWifi}
-                  onChange={(event) => updateField("showWifi", event.target.checked)}
-                  className="h-4 w-4 rounded border-zinc-300"
-                />
-                <span className="text-sm font-medium text-zinc-700">{t.fields.includeWifi}</span>
-              </label>
+              <div className="flex flex-col gap-3">
+                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={receipt.showTimestamp}
+                    onChange={(event) => updateField("showTimestamp", event.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  <span className="text-sm font-medium text-zinc-700">{t.fields.includeTimestamp}</span>
+                </label>
+                <label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={receipt.showWifi}
+                    onChange={(event) => updateField("showWifi", event.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-300"
+                  />
+                  <span className="text-sm font-medium text-zinc-700">{t.fields.includeWifi}</span>
+                </label>
+              </div>
             </div>
           </div>
         ) : (
@@ -388,19 +404,31 @@ export function PosApp() {
               />
             </label>
 
-            <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
-              <select
-                value={photoTicket.paperWidth}
-                onChange={(event) =>
-                  updatePhotoField("paperWidth", Number(event.target.value) as PaperWidth)
-                }
-                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
-              >
-                <option value={58}>58 mm</option>
-                <option value={80}>80 mm</option>
-              </select>
-            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
+                <select
+                  value={photoTicket.paperWidth}
+                  onChange={(event) =>
+                    updatePhotoField("paperWidth", Number(event.target.value) as PaperWidth)
+                  }
+                  className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+                >
+                  <option value={58}>58 mm</option>
+                  <option value={80}>80 mm</option>
+                </select>
+              </label>
+
+              <label className="flex items-end gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  checked={photoTicket.showTimestamp}
+                  onChange={(event) => updatePhotoField("showTimestamp", event.target.checked)}
+                  className="h-4 w-4 rounded border-zinc-300"
+                />
+                <span className="text-sm font-medium text-zinc-700">{t.fields.includeTimestamp}</span>
+              </label>
+            </div>
 
             <CameraCapture
               photoSourceDataUrl={photoTicket.photoSourceDataUrl}

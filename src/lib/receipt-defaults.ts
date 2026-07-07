@@ -32,6 +32,7 @@ export function loadReceiptDefaults(): ReceiptData {
         ? parsed.paperWidth
         : defaultReceiptData.paperWidth,
       showWifi: parsed.showWifi ?? defaultReceiptData.showWifi,
+      showTimestamp: parsed.showTimestamp ?? defaultReceiptData.showTimestamp,
     };
   } catch {
     return defaultReceiptData;
