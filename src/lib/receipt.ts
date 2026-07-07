@@ -78,6 +78,7 @@ export async function buildReceiptBuffer(
   const eventType = sanitizeForPrinter(data.eventType);
   const actionLabel = sanitizeForPrinter(data.actionLabel);
   const nombre = sanitizeForPrinter(data.nombre.trim());
+  const extra = sanitizeForPrinter(data.extra.trim());
   const wifiSsid = sanitizeForPrinter(data.wifiSsid);
   const wifiPassword = sanitizeForPrinter(data.wifiPassword);
 
@@ -93,6 +94,10 @@ export async function buildReceiptBuffer(
 
   if (nombre) {
     encoder.line(nombre);
+  }
+
+  if (extra) {
+    encoder.line(extra);
   }
 
   encoder.line(timestamp);

@@ -5,6 +5,7 @@ export type TicketMode = "event" | "photo";
 export interface ReceiptData {
   businessName: string;
   nombre: string;
+  extra: string;
   qrContent: string;
   eventType: string;
   actionLabel: string;
@@ -16,6 +17,7 @@ export interface ReceiptData {
 
 export interface PhotoTicketData {
   nombre: string;
+  extra: string;
   paperWidth: PaperWidth;
   photoDataUrl: string | null;
 }
@@ -23,6 +25,7 @@ export interface PhotoTicketData {
 export const defaultReceiptData: ReceiptData = {
   businessName: "Cursor Meetup - San José",
   nombre: "Juan Santamaría",
+  extra: "",
   qrContent: "https://luma.com/cursor-san-jose-costa-rica",
   eventType: "Drop-by slot",
   actionLabel: "Check-in",
@@ -34,6 +37,7 @@ export const defaultReceiptData: ReceiptData = {
 
 export const defaultPhotoTicketData: PhotoTicketData = {
   nombre: "Juan Santamaría",
+  extra: "",
   paperWidth: 58,
   photoDataUrl: null,
 };

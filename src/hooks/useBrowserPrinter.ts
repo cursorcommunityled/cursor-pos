@@ -34,23 +34,28 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
 
   const printerRef = useRef<BrowserReceiptPrinter | null>(null);
 
-  const bindPrinter = useCallback(
-    (printer: BrowserReceiptPrinter) => {
-      printer.addEventListener("connected", (info) => {
-        saveStoredPrinter(info);
-        setDevice(info);
-        setIsConnected(true);
-        setIsConnecting(false);
-      });
+  const bindPrinter = useCallback((printer: BrowserReceiptPrinter) => {
+    printer.addEventListener("connected", (info) => {
+      if (printerRef.current !== printer) {
+        return;
+      }
 
-      printer.addEventListener("disconnected", () => {
-        setIsConnected(false);
-        setDevice(null);
-        printerRef.current = null;
-      });
-    },
-    [],
-  );
+      saveStoredPrinter(info);
+      setDevice(info);
+      setIsConnected(true);
+      setIsConnecting(false);
+    });
+
+    printer.addEventListener("disconnected", () => {
+      if (printerRef.current !== printer) {
+        return;
+      }
+
+      setIsConnected(false);
+      setDevice(null);
+      printerRef.current = null;
+    });
+  }, []);
 
   const connect = useCallback(
     async (transport: PrinterTransport) => {
@@ -61,13 +66,14 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
       }
 
       setIsConnecting(true);
+      let printer: BrowserReceiptPrinter | null = null;
 
       try {
         if (printerRef.current) {
           await printerRef.current.disconnect();
         }
 
-        const printer = new BrowserReceiptPrinter();
+        printer = new BrowserReceiptPrinter();
         printerRef.current = printer;
         bindPrinter(printer);
 
@@ -79,6 +85,11 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
         await printer.connectUsb();
       } catch (error) {
         setIsConnecting(false);
+
+        if (printer && printerRef.current === printer) {
+          await printer.disconnect().catch(() => undefined);
+          printerRef.current = null;
+        }
 
         if (error instanceof DOMException && error.name === "NotFoundError") {
           throw new Error(
@@ -116,35 +127,10 @@ export function useBrowserPrinter(): UseBrowserPrinterResult {
   useEffect(() => {
     const stored = loadStoredPrinter();
 
-    if (!stored) {
-      return;
+    if (stored?.baudRate) {
+      setBaudRate(stored.baudRate);
     }
-
-    setBaudRate(stored.baudRate ?? 9600);
-
-    void (async () => {
-      try {
-        setIsConnecting(true);
-        const printer = new BrowserReceiptPrinter();
-        printerRef.current = printer;
-        bindPrinter(printer);
-
-        if (stored.transport === "serial") {
-          await printer.reconnectSerial(stored, { baudRate: stored.baudRate ?? 9600 });
-        } else if (!support.isWindows) {
-          await printer.reconnectUsb(stored);
-        } else {
-          clearStoredPrinter();
-        }
-      } catch {
-        clearStoredPrinter();
-        setDevice(null);
-        setIsConnected(false);
-      } finally {
-        setIsConnecting(false);
-      }
-    })();
-  }, [bindPrinter, support.isWindows]);
+  }, []);
 
   return {
     support,

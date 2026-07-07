@@ -36,6 +36,7 @@ export async function buildPhotoReceiptBuffer(
   const width = columnsForWidth(data.paperWidth);
   const encoder = createEncoder(encoderOptions, width);
   const nombre = sanitizeForPrinter(data.nombre.trim()) || "Invitado";
+  const extra = sanitizeForPrinter(data.extra.trim());
   const timestamp = formatTicketTimestamp();
 
   encoder.initialize().align("center");
@@ -45,8 +46,13 @@ export async function buildPhotoReceiptBuffer(
     .image(photo.canvas, photo.width, photo.height, "floydsteinberg", 140)
     .newline(2);
 
-  encoder.bold(true).line(nombre).bold(false).newline();
-  encoder.line(timestamp).newline(2);
+  encoder.bold(true).line(nombre).bold(false);
+
+  if (extra) {
+    encoder.line(extra);
+  }
+
+  encoder.newline().line(timestamp).newline(2);
 
   const logoSize = getLogoPrintSizeSmall(data.paperWidth);
   const logo = await loadLogoCanvasSmall(data.paperWidth);

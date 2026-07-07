@@ -22,6 +22,7 @@ export function loadReceiptDefaults(): ReceiptData {
     return {
       businessName: parsed.businessName ?? defaultReceiptData.businessName,
       nombre: parsed.nombre ?? defaultReceiptData.nombre,
+      extra: parsed.extra ?? defaultReceiptData.extra,
       qrContent: parsed.qrContent ?? defaultReceiptData.qrContent,
       eventType: parsed.eventType ?? defaultReceiptData.eventType,
       actionLabel: parsed.actionLabel ?? defaultReceiptData.actionLabel,

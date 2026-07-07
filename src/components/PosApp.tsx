@@ -11,12 +11,15 @@ import {
   Ticket,
   Unplug,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { AppTopBar } from "@/components/AppTopBar";
 import { CameraCapture } from "@/components/CameraCapture";
+import { DocsFooterLink } from "@/components/DocsBackLink";
 import { PhotoReceiptPreview } from "@/components/PhotoReceiptPreview";
 import { ReceiptPreview } from "@/components/ReceiptPreview";
 import { useBrowserPrinter } from "@/hooks/useBrowserPrinter";
+import { useLocale } from "@/lib/i18n/locale-context";
 import { downloadReceiptBuffer } from "@/lib/browser-printer";
 import { buildPhotoReceiptBuffer } from "@/lib/photo-receipt";
 import { loadReceiptDefaults, saveReceiptDefaults } from "@/lib/receipt-defaults";
@@ -32,17 +35,8 @@ import {
 
 type FieldKey = keyof ReceiptData;
 
-const textFields: Array<{ key: FieldKey; label: string; placeholder: string }> = [
-  { key: "businessName", label: "Nombre del negocio", placeholder: "Cursor Meetup - San José" },
-  { key: "nombre", label: "Nombre", placeholder: "Juan Santamaría" },
-  { key: "qrContent", label: "Contenido del QR", placeholder: "https://luma.com/..." },
-  { key: "eventType", label: "Tipo de evento", placeholder: "Drop-by slot" },
-  { key: "actionLabel", label: "Acción", placeholder: "Check-in" },
-  { key: "wifiSsid", label: "Red WiFi", placeholder: "Taller.1" },
-  { key: "wifiPassword", label: "Clave WiFi", placeholder: "@Salvo20" },
-];
-
 export function PosApp() {
+  const { t } = useLocale();
   const [mode, setMode] = useState<TicketMode>("event");
   const [receipt, setReceipt] = useState<ReceiptData>(defaultReceiptData);
   const [photoTicket, setPhotoTicket] = useState<PhotoTicketData>(defaultPhotoTicketData);
@@ -61,12 +55,28 @@ export function PosApp() {
     print,
   } = useBrowserPrinter();
 
+  const textFields = useMemo(
+    () =>
+      [
+        { key: "businessName" as const, label: t.fields.businessName, placeholder: t.placeholders.businessName },
+        { key: "nombre" as const, label: t.fields.nombre, placeholder: t.placeholders.nombre },
+        { key: "extra" as const, label: t.fields.extra, placeholder: t.placeholders.extra },
+        { key: "qrContent" as const, label: t.fields.qrContent, placeholder: t.placeholders.qrContent },
+        { key: "eventType" as const, label: t.fields.eventType, placeholder: t.placeholders.eventType },
+        { key: "actionLabel" as const, label: t.fields.actionLabel, placeholder: t.placeholders.actionLabel },
+        { key: "wifiSsid" as const, label: t.fields.wifiSsid, placeholder: t.placeholders.wifiSsid },
+        { key: "wifiPassword" as const, label: t.fields.wifiPassword, placeholder: t.placeholders.wifiPassword },
+      ] satisfies Array<{ key: FieldKey; label: string; placeholder: string }>,
+    [t],
+  );
+
   useEffect(() => {
     const saved = loadReceiptDefaults();
     setReceipt(saved);
     setPhotoTicket((current) => ({
       ...current,
       nombre: saved.nombre,
+      extra: saved.extra,
       paperWidth: saved.paperWidth,
     }));
   }, []);
@@ -74,10 +84,11 @@ export function PosApp() {
   function updateField<K extends FieldKey>(key: K, value: ReceiptData[K]) {
     setReceipt((current) => ({ ...current, [key]: value }));
 
-    if (key === "nombre" || key === "paperWidth") {
+    if (key === "nombre" || key === "extra" || key === "paperWidth") {
       setPhotoTicket((current) => ({
         ...current,
         ...(key === "nombre" ? { nombre: value as string } : {}),
+        ...(key === "extra" ? { extra: value as string } : {}),
         ...(key === "paperWidth" ? { paperWidth: value as PaperWidth } : {}),
       }));
     }
@@ -89,6 +100,9 @@ export function PosApp() {
     if (key === "nombre") {
       setReceipt((current) => ({ ...current, nombre: value as string }));
     }
+    if (key === "extra") {
+      setReceipt((current) => ({ ...current, extra: value as string }));
+    }
     if (key === "paperWidth") {
       setReceipt((current) => ({ ...current, paperWidth: value as PaperWidth }));
     }
@@ -96,7 +110,7 @@ export function PosApp() {
 
   function handleSaveDefaults() {
     saveReceiptDefaults(receipt);
-    setStatus("Valores guardados como predeterminados.");
+    setStatus(t.status.defaultsSaved);
   }
 
   async function handleConnect(transport: "serial" | "usb") {
@@ -105,25 +119,25 @@ export function PosApp() {
     try {
       await connect(transport);
       setStatus(
-        transport === "serial"
-          ? "Impresora conectada por puerto serial."
-          : "Impresora conectada por USB.",
+        transport === "serial" ? t.status.connectedSerial : t.status.connectedUsb,
       );
     } catch (error) {
+      const rawMessage = error instanceof Error ? error.message : t.status.connectError;
       const message =
-        error instanceof Error ? error.message : "No se pudo conectar la impresora.";
+        rawMessage.includes("Failed to open") ||
+        (error instanceof DOMException && error.name === "NetworkError")
+          ? t.status.serialOpenFailed
+          : rawMessage.includes("cancel") || rawMessage.includes("Cancel")
+            ? t.status.connectCancelled
+            : rawMessage;
 
-      setStatus(
-        message.includes("cancel") || message.includes("Cancel")
-          ? "Conexión cancelada. Vuelve a intentarlo y elige tu impresora en el diálogo del navegador."
-          : message,
-      );
+      setStatus(message);
     }
   }
 
   async function handleDisconnect() {
     await disconnect();
-    setStatus("Impresora desconectada.");
+    setStatus(t.status.disconnected);
   }
 
   async function handlePrint() {
@@ -142,9 +156,9 @@ export function PosApp() {
           : await buildPhotoReceiptBuffer(photoTicket, encoderOptions);
 
       await print(buffer);
-      setStatus(mode === "event" ? "Ticket enviado a la impresora." : "Foto enviada a la impresora.");
+      setStatus(mode === "event" ? t.status.printEvent : t.status.printPhoto);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Error al imprimir.");
+      setStatus(error instanceof Error ? error.message : t.status.printError);
     } finally {
       setIsPrinting(false);
     }
@@ -163,9 +177,9 @@ export function PosApp() {
           : await buildPhotoReceiptBuffer(photoTicket, encoderOptions);
 
       downloadReceiptBuffer(buffer);
-      setStatus("Archivo ESC/POS descargado.");
+      setStatus(t.status.downloaded);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Error al descargar.");
+      setStatus(error instanceof Error ? error.message : t.status.downloadError);
     }
   }
 
@@ -174,8 +188,10 @@ export function PosApp() {
 
   return (
     <div className="mx-auto w-full max-w-7xl px-6 py-10">
+      <AppTopBar />
+
       <div className="mb-8 rounded-3xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5">
-        <p className="mb-3 text-sm font-medium text-zinc-700">Tipo de ticket</p>
+        <p className="mb-3 text-sm font-medium text-zinc-700">{t.ticketMode.label}</p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
             type="button"
@@ -187,7 +203,7 @@ export function PosApp() {
             }`}
           >
             <Ticket className="h-5 w-5" />
-            Ticket de evento
+            {t.ticketMode.event}
           </button>
           <button
             type="button"
@@ -199,7 +215,7 @@ export function PosApp() {
             }`}
           >
             <Camera className="h-5 w-5" />
-            Ticket con foto
+            {t.ticketMode.photo}
           </button>
         </div>
       </div>
@@ -207,31 +223,29 @@ export function PosApp() {
       <div className="flex flex-col gap-10 xl:flex-row xl:items-start">
       <section className="w-full shrink-0 rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm xl:w-[520px]">
         <div className="mb-6">
-          <p className="text-sm font-medium text-zinc-500">Cursor POS</p>
+          <p className="text-sm font-medium text-zinc-500">{t.app.brand}</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-zinc-900">
-            Impresión de tickets
+            {t.app.title}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600">
-            Conecta tu impresora térmica desde el navegador y imprime directo, también en Vercel.
-          </p>
+          <p className="mt-2 text-sm leading-6 text-zinc-600">{t.app.subtitle}</p>
         </div>
 
         {!browserReady ? (
           <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-            Este navegador no soporta impresión directa. Abre la app en Chrome o Edge con HTTPS.
+            {t.browser.unsupported}
           </div>
         ) : null}
 
         <div className="mb-6 space-y-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-zinc-800">Impresora</p>
+              <p className="text-sm font-medium text-zinc-800">{t.printer.title}</p>
               <p className="text-sm text-zinc-600">
                 {isConnecting
-                  ? "Conectando..."
+                  ? t.printer.connecting
                   : isConnected && device
                     ? device.label
-                    : "Sin conectar"}
+                    : t.printer.disconnected}
               </p>
             </div>
             <span
@@ -241,13 +255,13 @@ export function PosApp() {
                   : "bg-zinc-200 text-zinc-700"
               }`}
             >
-              {isConnected ? "Conectada" : "Desconectada"}
+              {isConnected ? t.printer.statusConnected : t.printer.statusDisconnected}
             </span>
           </div>
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-zinc-700">
-              Velocidad serial (baud)
+              {t.printer.baud}
             </span>
             <select
               value={baudRate}
@@ -274,7 +288,7 @@ export function PosApp() {
               ) : (
                 <Cable className="h-4 w-4" />
               )}
-              Conectar Serial
+              {t.printer.connectSerial}
             </button>
             <button
               type="button"
@@ -282,15 +296,11 @@ export function PosApp() {
               disabled={
                 !support.usb || support.isWindows || isConnecting || isConnected
               }
-              title={
-                support.isWindows
-                  ? "En Windows el driver bloquea WebUSB. Usa Conectar Serial."
-                  : undefined
-              }
+              title={support.isWindows ? t.printer.usbWindowsHint : undefined}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <PlugZap className="h-4 w-4" />
-              {support.isWindows ? "USB no disponible" : "Conectar USB"}
+              {support.isWindows ? t.printer.usbUnavailable : t.printer.connectUsb}
             </button>
           </div>
 
@@ -301,7 +311,7 @@ export function PosApp() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
             >
               <Unplug className="h-4 w-4" />
-              Desconectar
+              {t.printer.disconnect}
             </button>
           ) : null}
         </div>
@@ -330,7 +340,7 @@ export function PosApp() {
 
             <div className="grid grid-cols-2 gap-4">
               <label className="block">
-                <span className="mb-1.5 block text-sm font-medium text-zinc-700">Ancho de papel</span>
+                <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
                 <select
                   value={receipt.paperWidth}
                   onChange={(event) =>
@@ -350,25 +360,36 @@ export function PosApp() {
                   onChange={(event) => updateField("showWifi", event.target.checked)}
                   className="h-4 w-4 rounded border-zinc-300"
                 />
-                <span className="text-sm font-medium text-zinc-700">Incluir WiFi</span>
+                <span className="text-sm font-medium text-zinc-700">{t.fields.includeWifi}</span>
               </label>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-zinc-700">Nombre</span>
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.name}</span>
               <input
                 type="text"
                 value={photoTicket.nombre}
-                placeholder="Juan Santamaría"
+                placeholder={t.placeholders.nombre}
                 onChange={(event) => updatePhotoField("nombre", event.target.value)}
                 className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
               />
             </label>
 
             <label className="block">
-              <span className="mb-1.5 block text-sm font-medium text-zinc-700">Ancho de papel</span>
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.extra}</span>
+              <input
+                type="text"
+                value={photoTicket.extra}
+                placeholder={t.placeholders.extra}
+                onChange={(event) => updatePhotoField("extra", event.target.value)}
+                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:bg-white"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700">{t.fields.paperWidth}</span>
               <select
                 value={photoTicket.paperWidth}
                 onChange={(event) =>
@@ -400,7 +421,7 @@ export function PosApp() {
             ) : (
               <Printer className="h-4 w-4" />
             )}
-            {mode === "event" ? "Imprimir ticket" : "Imprimir foto"}
+            {mode === "event" ? t.actions.printEvent : t.actions.printPhoto}
           </button>
           <button
             type="button"
@@ -409,7 +430,7 @@ export function PosApp() {
             className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Download className="h-4 w-4" />
-            Descargar ESC/POS
+            {t.actions.download}
           </button>
         </div>
 
@@ -420,7 +441,7 @@ export function PosApp() {
             className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
           >
             <Save className="h-4 w-4" />
-            Guardar defaults
+            {t.actions.saveDefaults}
           </button>
         ) : null}
 
@@ -428,12 +449,7 @@ export function PosApp() {
           <p className="mt-4 rounded-xl bg-zinc-100 px-4 py-3 text-sm text-zinc-700">{status}</p>
         ) : null}
 
-        <p className="mt-4 text-xs leading-5 text-zinc-500">
-          MTP-2 por Bluetooth: Conectar Serial y elige <strong>MTP-2: vinculado</strong>. Por cable
-          USB necesitas un puerto COM de cable (CH340), no los COM de Bluetooth (COM10–COM13).
-          Velocidad recomendada: 9600 baud. El logo se imprime en blanco y negro optimizado para
-          papel térmico.
-        </p>
+        <p className="mt-4 text-xs leading-5 text-zinc-500">{t.printer.footnote}</p>
       </section>
 
       <aside className="flex min-w-0 flex-1 justify-center xl:sticky xl:top-10 xl:justify-center">
@@ -444,6 +460,8 @@ export function PosApp() {
         )}
       </aside>
       </div>
+
+      <DocsFooterLink />
     </div>
   );
 }

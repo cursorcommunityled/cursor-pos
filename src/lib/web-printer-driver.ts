@@ -104,6 +104,59 @@ function buildLabel(info: {
   return info.transport === "serial" ? "Puerto serial" : "Impresora USB";
 }
 
+function isSerialPortOpen(port: SerialPort): boolean {
+  return port.readable !== null || port.writable !== null;
+}
+
+async function closeSerialPortSafely(port: SerialPort): Promise<void> {
+  if (!isSerialPortOpen(port)) {
+    return;
+  }
+
+  if (port.readable) {
+    try {
+      const reader = port.readable.getReader();
+      await reader.cancel().catch(() => undefined);
+      reader.releaseLock();
+    } catch {
+      // The readable stream may already be locked by the drain loop.
+    }
+  }
+
+  await port.close().catch(() => undefined);
+}
+
+async function openSerialPortSafely(
+  port: SerialPort,
+  options: SerialOpenOptions,
+): Promise<void> {
+  await closeSerialPortSafely(port);
+
+  const openOptions = {
+    baudRate: options.baudRate,
+    dataBits: options.dataBits ?? 8,
+    stopBits: options.stopBits ?? 1,
+    parity: options.parity ?? "none",
+    flowControl: options.flowControl ?? "none",
+  } as const;
+
+  try {
+    await port.open(openOptions);
+  } catch (error) {
+    if (
+      error instanceof DOMException &&
+      (error.name === "NetworkError" || error.message.includes("Failed to open"))
+    ) {
+      await closeSerialPortSafely(port);
+      await new Promise((resolve) => window.setTimeout(resolve, 300));
+      await port.open(openOptions);
+      return;
+    }
+
+    throw error;
+  }
+}
+
 function findUsbOutEndpoint(device: USBDevice): {
   configurationValue: number;
   interfaceNumber: number;
@@ -136,6 +189,8 @@ export class BrowserReceiptPrinter {
   private usbEndpoint: number | null = null;
   private queue: Uint8Array[] = [];
   private isWriting = false;
+  private serialClosing = false;
+  private serialReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   private onConnected: ConnectedHandler | null = null;
   private onDisconnected: (() => void) | null = null;
 
@@ -153,16 +208,15 @@ export class BrowserReceiptPrinter {
   }
 
   async connectSerial(options: SerialOpenOptions): Promise<void> {
+    const ports = await getSerialApi().getPorts();
+    await Promise.all(ports.filter(isSerialPortOpen).map((port) => closeSerialPortSafely(port)));
+
     const port = await getSerialApi().requestPort();
-    await port.open({
-      baudRate: options.baudRate,
-      dataBits: options.dataBits ?? 8,
-      stopBits: options.stopBits ?? 1,
-      parity: options.parity ?? "none",
-      flowControl: options.flowControl ?? "none",
-    });
+    await openSerialPortSafely(port, options);
 
     this.serialPort = port;
+    this.serialClosing = false;
+    this.startSerialDrain();
     const info = port.getInfo();
 
     this.onConnected?.({
@@ -201,15 +255,11 @@ export class BrowserReceiptPrinter {
       throw new Error("No hay un puerto serial autorizado para reconectar.");
     }
 
-    await match.open({
-      baudRate: options.baudRate,
-      dataBits: options.dataBits ?? 8,
-      stopBits: options.stopBits ?? 1,
-      parity: options.parity ?? "none",
-      flowControl: options.flowControl ?? "none",
-    });
+    await openSerialPortSafely(match, options);
 
     this.serialPort = match;
+    this.serialClosing = false;
+    this.startSerialDrain();
     this.onConnected?.(device);
   }
 
@@ -300,6 +350,45 @@ export class BrowserReceiptPrinter {
     throw new Error("No hay impresora conectada.");
   }
 
+  private startSerialDrain(): void {
+    const port = this.serialPort;
+
+    if (!port?.readable || this.serialClosing) {
+      return;
+    }
+
+    void this.drainSerialPort(port);
+  }
+
+  private async drainSerialPort(port: SerialPort): Promise<void> {
+    while (port.readable && !this.serialClosing && this.serialPort === port) {
+      let reader: ReadableStreamDefaultReader<Uint8Array>;
+
+      try {
+        reader = port.readable.getReader();
+        this.serialReader = reader;
+      } catch {
+        break;
+      }
+
+      try {
+        for (;;) {
+          const { done } = await reader.read();
+          if (done) {
+            break;
+          }
+        }
+      } catch {
+        // Reader cancelled while disconnecting.
+      } finally {
+        reader.releaseLock();
+        if (this.serialReader === reader) {
+          this.serialReader = null;
+        }
+      }
+    }
+  }
+
   private async flushSerialQueue(): Promise<void> {
     if (!this.serialPort?.writable || this.isWriting) {
       return;
@@ -327,8 +416,20 @@ export class BrowserReceiptPrinter {
 
   async disconnect(): Promise<void> {
     if (this.serialPort) {
-      await this.serialPort.close();
+      this.serialClosing = true;
+
+      if (this.serialReader) {
+        await this.serialReader.cancel().catch(() => undefined);
+      }
+
+      while (this.isWriting) {
+        await new Promise((resolve) => window.setTimeout(resolve, 50));
+      }
+
+      const port = this.serialPort;
       this.serialPort = null;
+      await closeSerialPortSafely(port);
+      this.serialClosing = false;
     }
 
     if (this.usbDevice) {
