@@ -86,6 +86,7 @@ export type Translations = {
     hintIdle: string;
     hintReview: string;
     hintReady: string;
+    hintPan: string;
     change: string;
     cameraLabel: string;
     switchCamera: string;
@@ -238,8 +239,9 @@ export const translations: Record<Locale, Translations> = {
     camera: {
       title: "Foto",
       hintIdle: "Activa la camara o elige una imagen",
-      hintReview: "Revisa la foto antes de usarla",
-      hintReady: "Foto lista para imprimir",
+      hintReview: "Arrastra la foto para encuadrarla y confirma",
+      hintReady: "Arrastra la foto para ajustar el encuadre",
+      hintPan: "Arrastra para mover la foto",
       change: "Cambiar",
       cameraLabel: "Camara",
       switchCamera: "Cambiar camara",
@@ -391,8 +393,9 @@ export const translations: Record<Locale, Translations> = {
     camera: {
       title: "Photo",
       hintIdle: "Turn on the camera or choose an image",
-      hintReview: "Review the photo before using it",
-      hintReady: "Photo ready to print",
+      hintReview: "Drag the photo to frame it, then confirm",
+      hintReady: "Drag the photo to adjust the framing",
+      hintPan: "Drag to reposition the photo",
       change: "Change",
       cameraLabel: "Camera",
       switchCamera: "Switch camera",

@@ -5,6 +5,24 @@ function toEscPosSize(size: number): number {
 /** Portrait frame: 3:5 reduced 40% in height -> 3:3 (square). */
 export const PHOTO_FRAME_RATIO = 1;
 
+export interface PhotoFrameOffset {
+  x: number;
+  y: number;
+}
+
+export const DEFAULT_PHOTO_FRAME_OFFSET: PhotoFrameOffset = { x: 0.5, y: 0.5 };
+
+function clampOffset(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
+export function clampPhotoFrameOffset(offset: PhotoFrameOffset): PhotoFrameOffset {
+  return {
+    x: clampOffset(offset.x),
+    y: clampOffset(offset.y),
+  };
+}
+
 export function getPhotoPreviewAspectClass(): string {
   return "aspect-square";
 }
@@ -22,9 +40,11 @@ function cropSourceToAspect(
   sourceWidth: number,
   sourceHeight: number,
   outputWidth: number,
+  offset: PhotoFrameOffset = DEFAULT_PHOTO_FRAME_OFFSET,
 ): HTMLCanvasElement {
   const targetAspect = PHOTO_FRAME_RATIO;
   const sourceAspect = sourceWidth / sourceHeight;
+  const normalizedOffset = clampPhotoFrameOffset(offset);
 
   let cropWidth: number;
   let cropHeight: number;
@@ -34,13 +54,13 @@ function cropSourceToAspect(
   if (sourceAspect > targetAspect) {
     cropHeight = sourceHeight;
     cropWidth = cropHeight * targetAspect;
-    sourceX = (sourceWidth - cropWidth) / 2;
+    sourceX = (sourceWidth - cropWidth) * normalizedOffset.x;
     sourceY = 0;
   } else {
     cropWidth = sourceWidth;
     cropHeight = cropWidth / targetAspect;
     sourceX = 0;
-    sourceY = (sourceHeight - cropHeight) / 2;
+    sourceY = (sourceHeight - cropHeight) * normalizedOffset.y;
   }
 
   const outputHeight = Math.round(outputWidth / targetAspect);
@@ -70,17 +90,104 @@ function cropSourceToAspect(
   return canvas;
 }
 
-export function cropVideoFrameToPhotoAspect(video: HTMLVideoElement): HTMLCanvasElement {
-  return cropSourceToAspect(video, video.videoWidth, video.videoHeight, 960);
+export function computePhotoCoverLayout(
+  sourceWidth: number,
+  sourceHeight: number,
+  frameSize: number,
+  offset: PhotoFrameOffset,
+): { width: number; height: number; left: number; top: number; canPanX: boolean; canPanY: boolean } {
+  if (sourceWidth === 0 || sourceHeight === 0 || frameSize === 0) {
+    return {
+      width: frameSize,
+      height: frameSize,
+      left: 0,
+      top: 0,
+      canPanX: false,
+      canPanY: false,
+    };
+  }
+
+  const normalizedOffset = clampPhotoFrameOffset(offset);
+  const scale = Math.max(frameSize / sourceWidth, frameSize / sourceHeight);
+  const width = sourceWidth * scale;
+  const height = sourceHeight * scale;
+  const maxPanX = Math.max(0, width - frameSize);
+  const maxPanY = Math.max(0, height - frameSize);
+
+  return {
+    width,
+    height,
+    left: -maxPanX * normalizedOffset.x,
+    top: -maxPanY * normalizedOffset.y,
+    canPanX: maxPanX > 0,
+    canPanY: maxPanY > 0,
+  };
 }
 
-export async function normalizePhotoDataUrl(dataUrl: string): Promise<string> {
+export function captureVideoFrameFull(video: HTMLVideoElement): HTMLCanvasElement {
+  const canvas = document.createElement("canvas");
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("No se pudo preparar la foto.");
+  }
+
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+export function cropVideoFrameToPhotoAspect(
+  video: HTMLVideoElement,
+  offset: PhotoFrameOffset = DEFAULT_PHOTO_FRAME_OFFSET,
+): HTMLCanvasElement {
+  return cropSourceToAspect(video, video.videoWidth, video.videoHeight, 960, offset);
+}
+
+export async function normalizePhotoSourceDataUrl(dataUrl: string): Promise<string> {
   const image = await loadImageFromDataUrl(dataUrl);
+  const maxDimension = 1920;
+  let width = image.naturalWidth;
+  let height = image.naturalHeight;
+
+  if (Math.max(width, height) > maxDimension) {
+    const scale = maxDimension / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("No se pudo preparar la foto.");
+  }
+
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.92);
+}
+
+/** @deprecated Use normalizePhotoSourceDataUrl and renderPhotoDataUrl instead. */
+export async function normalizePhotoDataUrl(dataUrl: string): Promise<string> {
+  const source = await normalizePhotoSourceDataUrl(dataUrl);
+  return renderPhotoDataUrl(source, DEFAULT_PHOTO_FRAME_OFFSET);
+}
+
+export async function renderPhotoDataUrl(
+  sourceDataUrl: string,
+  offset: PhotoFrameOffset,
+  outputWidth = 960,
+): Promise<string> {
+  const image = await loadImageFromDataUrl(sourceDataUrl);
   const canvas = cropSourceToAspect(
     image,
     image.naturalWidth,
     image.naturalHeight,
-    960,
+    outputWidth,
+    offset,
   );
 
   return canvas.toDataURL("image/jpeg", 0.92);

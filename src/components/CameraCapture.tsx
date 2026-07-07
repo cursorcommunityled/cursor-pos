@@ -3,16 +3,28 @@
 import { Camera, Check, ImagePlus, RefreshCw, RotateCcw } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { PhotoFrameEditor } from "@/components/PhotoFrameEditor";
 import {
-  cropVideoFrameToPhotoAspect,
+  DEFAULT_PHOTO_FRAME_OFFSET,
+  captureVideoFrameFull,
   getPhotoPreviewAspectClass,
-  normalizePhotoDataUrl,
+  normalizePhotoSourceDataUrl,
+  renderPhotoDataUrl,
+  type PhotoFrameOffset,
 } from "@/lib/photo-image";
 import { useLocale } from "@/lib/i18n/locale-context";
 
-interface CameraCaptureProps {
+export interface PhotoCaptureState {
+  photoSourceDataUrl: string | null;
+  photoFrameOffset: PhotoFrameOffset;
   photoDataUrl: string | null;
-  onPhotoChange: (dataUrl: string | null) => void;
+}
+
+interface CameraCaptureProps {
+  photoSourceDataUrl: string | null;
+  photoFrameOffset: PhotoFrameOffset;
+  photoDataUrl: string | null;
+  onPhotoChange: (value: PhotoCaptureState) => void;
 }
 
 interface CameraDevice {
@@ -31,20 +43,36 @@ async function loadCameras(defaultLabel: string): Promise<CameraDevice[]> {
     }));
 }
 
-export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProps) {
+export function CameraCapture({
+  photoSourceDataUrl,
+  photoFrameOffset,
+  photoDataUrl,
+  onPhotoChange,
+}: CameraCaptureProps) {
   const { t } = useLocale();
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const renderRequestRef = useRef(0);
+  const onPhotoChangeRef = useRef(onPhotoChange);
+  onPhotoChangeRef.current = onPhotoChange;
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [cameras, setCameras] = useState<CameraDevice[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [isActive, setIsActive] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
-  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const [pendingSource, setPendingSource] = useState<string | null>(null);
+  const [pendingOffset, setPendingOffset] = useState<PhotoFrameOffset>(
+    DEFAULT_PHOTO_FRAME_OFFSET,
+  );
   const [lastDeviceId, setLastDeviceId] = useState<string>("");
   const [photoSource, setPhotoSource] = useState<"camera" | "upload" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isReviewing = pendingSource !== null;
+  const activeSource = isReviewing ? pendingSource : photoSourceDataUrl;
+  const activeOffset = isReviewing ? pendingOffset : photoFrameOffset;
+  const hasConfirmedPhoto = photoSourceDataUrl !== null && !isReviewing;
 
   useEffect(() => {
     return () => {
@@ -62,7 +90,7 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
     void video.play().catch(() => {
       setError(t.camera.cameraPlayError);
     });
-  }, [stream, isActive]);
+  }, [stream, isActive, t.camera.cameraPlayError]);
 
   useEffect(() => {
     function handleDeviceChange() {
@@ -77,7 +105,7 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
     return () => {
       navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
     };
-  }, [isActive]);
+  }, [isActive, t.camera.cameraDefault]);
 
   useEffect(() => {
     if (countdown === null) {
@@ -98,6 +126,40 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
       window.clearTimeout(timer);
     };
   }, [countdown]);
+
+  useEffect(() => {
+    if (!activeSource) {
+      return;
+    }
+
+    const requestId = ++renderRequestRef.current;
+    const timer = window.setTimeout(() => {
+      void renderPhotoDataUrl(activeSource, activeOffset).then((rendered) => {
+        if (requestId !== renderRequestRef.current) {
+          return;
+        }
+
+        if (isReviewing) {
+          onPhotoChangeRef.current({
+            photoSourceDataUrl: activeSource,
+            photoFrameOffset: activeOffset,
+            photoDataUrl: rendered,
+          });
+          return;
+        }
+
+        onPhotoChangeRef.current({
+          photoSourceDataUrl: activeSource,
+          photoFrameOffset: activeOffset,
+          photoDataUrl: rendered,
+        });
+      });
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeSource, activeOffset, isReviewing]);
 
   function stopStreamTracks(activeStream: MediaStream | null) {
     activeStream?.getTracks().forEach((track) => track.stop());
@@ -185,6 +247,13 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
     }
   }
 
+  function beginPhotoReview(sourceDataUrl: string, source: "camera" | "upload") {
+    setPendingSource(sourceDataUrl);
+    setPendingOffset(DEFAULT_PHOTO_FRAME_OFFSET);
+    setPhotoSource(source);
+    stopCamera();
+  }
+
   function capturePhotoNow() {
     const video = videoRef.current;
     if (!video) {
@@ -199,24 +268,32 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
       return;
     }
 
-    const canvas = cropVideoFrameToPhotoAspect(video);
-    setPendingPhoto(canvas.toDataURL("image/jpeg", 0.92));
-    setPhotoSource("camera");
-    stopCamera();
+    const canvas = captureVideoFrameFull(video);
+    beginPhotoReview(canvas.toDataURL("image/jpeg", 0.92), "camera");
   }
 
   function confirmPhoto() {
-    if (!pendingPhoto) {
+    if (!pendingSource) {
       return;
     }
 
-    onPhotoChange(pendingPhoto);
-    setPendingPhoto(null);
+    void renderPhotoDataUrl(pendingSource, pendingOffset).then((rendered) => {
+      onPhotoChangeRef.current({
+        photoSourceDataUrl: pendingSource,
+        photoFrameOffset: pendingOffset,
+        photoDataUrl: rendered,
+      });
+      setPendingSource(null);
+    });
   }
 
   async function retakePhoto() {
-    setPendingPhoto(null);
-    onPhotoChange(null);
+    setPendingSource(null);
+    onPhotoChange({
+      photoSourceDataUrl: null,
+      photoFrameOffset: DEFAULT_PHOTO_FRAME_OFFSET,
+      photoDataUrl: null,
+    });
     setError(null);
 
     if (photoSource === "upload") {
@@ -271,10 +348,9 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
         return;
       }
 
-      void normalizePhotoDataUrl(reader.result)
+      void normalizePhotoSourceDataUrl(reader.result)
         .then((normalized) => {
-          setPendingPhoto(normalized);
-          setPhotoSource("upload");
+          beginPhotoReview(normalized, "upload");
         })
         .catch(() => {
           setError(t.camera.imageProcessError);
@@ -285,17 +361,35 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
   }
 
   function clearPhoto() {
-    setPendingPhoto(null);
+    setPendingSource(null);
     setPhotoSource(null);
-    onPhotoChange(null);
+    onPhotoChange({
+      photoSourceDataUrl: null,
+      photoFrameOffset: DEFAULT_PHOTO_FRAME_OFFSET,
+      photoDataUrl: null,
+    });
     stopCamera();
   }
 
+  function handleOffsetChange(nextOffset: PhotoFrameOffset) {
+    if (isReviewing) {
+      setPendingOffset(nextOffset);
+      return;
+    }
+
+    if (!photoSourceDataUrl) {
+      return;
+    }
+
+    onPhotoChange({
+      photoSourceDataUrl,
+      photoFrameOffset: nextOffset,
+      photoDataUrl,
+    });
+  }
+
   const photoFrameClass = getPhotoPreviewAspectClass();
-  const displayedPhoto = pendingPhoto ?? photoDataUrl;
-  const isReviewing = pendingPhoto !== null;
-  const hasConfirmedPhoto = photoDataUrl !== null && !isReviewing;
-  const showCameraPicker = isActive && !displayedPhoto && cameras.length > 0;
+  const showCameraPicker = isActive && !activeSource && cameras.length > 0;
   const isCountingDown = countdown !== null;
 
   return (
@@ -354,11 +448,12 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
         </div>
       ) : null}
 
-      {displayedPhoto ? (
-        <div className={`overflow-hidden rounded-xl border border-zinc-200 bg-white ${photoFrameClass}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={displayedPhoto} alt="Foto capturada" className="h-full w-full object-cover" />
-        </div>
+      {activeSource ? (
+        <PhotoFrameEditor
+          sourceDataUrl={activeSource}
+          offset={activeOffset}
+          onOffsetChange={handleOffsetChange}
+        />
       ) : isActive ? (
         <div className={`relative overflow-hidden rounded-xl border border-zinc-200 bg-black ${photoFrameClass}`}>
           <video
@@ -384,7 +479,7 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        {!displayedPhoto && !isActive ? (
+        {!activeSource && !isActive ? (
           <>
             <button
               type="button"
@@ -405,7 +500,7 @@ export function CameraCapture({ photoDataUrl, onPhotoChange }: CameraCaptureProp
           </>
         ) : null}
 
-        {isActive && !displayedPhoto ? (
+        {isActive && !activeSource ? (
           <>
             <button
               type="button"

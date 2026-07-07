@@ -403,8 +403,15 @@ export function PosApp() {
             </label>
 
             <CameraCapture
+              photoSourceDataUrl={photoTicket.photoSourceDataUrl}
+              photoFrameOffset={photoTicket.photoFrameOffset}
               photoDataUrl={photoTicket.photoDataUrl}
-              onPhotoChange={(dataUrl) => updatePhotoField("photoDataUrl", dataUrl)}
+              onPhotoChange={(value) =>
+                setPhotoTicket((current) => ({
+                  ...current,
+                  ...value,
+                }))
+              }
             />
           </div>
         )}

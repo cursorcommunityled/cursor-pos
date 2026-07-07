@@ -1,3 +1,6 @@
+import type { PhotoFrameOffset } from "./photo-image";
+import { DEFAULT_PHOTO_FRAME_OFFSET } from "./photo-image";
+
 export type PaperWidth = 58 | 80;
 
 export type TicketMode = "event" | "photo";
@@ -19,6 +22,8 @@ export interface PhotoTicketData {
   nombre: string;
   extra: string;
   paperWidth: PaperWidth;
+  photoSourceDataUrl: string | null;
+  photoFrameOffset: PhotoFrameOffset;
   photoDataUrl: string | null;
 }
 
@@ -39,6 +44,8 @@ export const defaultPhotoTicketData: PhotoTicketData = {
   nombre: "Juan Santamaría",
   extra: "",
   paperWidth: 58,
+  photoSourceDataUrl: null,
+  photoFrameOffset: DEFAULT_PHOTO_FRAME_OFFSET,
   photoDataUrl: null,
 };
 
