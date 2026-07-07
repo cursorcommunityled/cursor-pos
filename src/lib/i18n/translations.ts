@@ -178,6 +178,10 @@ export type Translations = {
     connectSecurityBody: string;
     connectSecurityDeployHint: string;
     serverCalendarHint: string;
+    connectSettingsTitle: string;
+    connectServerActive: string;
+    connectUseOwnKey: string;
+    connectHideForm: string;
   };
 };
 
@@ -400,6 +404,11 @@ export const translations: Record<Locale, Translations> = {
         "Para maxima seguridad, haz fork del repo y despliega tu propia instancia en Vercel con LUMA_API_KEY en variables de entorno. Asi la key nunca sale de tu proyecto.",
       serverCalendarHint:
         "Este despliegue usa una API key configurada en el servidor (ideal para la instancia oficial del organizador).",
+      connectSettingsTitle: "Calendario Luma",
+      connectServerActive:
+        "Ahora mismo ves los eventos del calendario configurado en este despliegue.",
+      connectUseOwnKey: "Usar mi propia API key",
+      connectHideForm: "Ocultar",
     },
   },
   en: {
@@ -619,6 +628,11 @@ export const translations: Record<Locale, Translations> = {
         "For maximum security, fork the repo and deploy your own Vercel instance with LUMA_API_KEY in environment variables. That way the key never leaves your project.",
       serverCalendarHint:
         "This deployment uses a server-side API key (best for the official organizer instance).",
+      connectSettingsTitle: "Luma calendar",
+      connectServerActive:
+        "You are currently seeing events from this deployment's configured calendar.",
+      connectUseOwnKey: "Use my own API key",
+      connectHideForm: "Hide",
     },
   },
 };

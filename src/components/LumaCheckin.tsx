@@ -122,6 +122,7 @@ export function LumaCheckin({
   const [reprintingId, setReprintingId] = useState<string | null>(null);
   const [authMode, setAuthMode] = useState<LumaAuthMode>("loading");
   const [authRefreshKey, setAuthRefreshKey] = useState(0);
+  const [serverConfigured, setServerConfigured] = useState(false);
 
   const selectedEvent = useMemo(
     () => events.find((event) => event.id === selectedEventId) ?? null,
@@ -131,6 +132,27 @@ export function LumaCheckin({
   useEffect(() => {
     setLogEntries(loadStoredLog());
     setSelectedEventId(loadStoredEventId());
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    void fetch("/api/luma/status")
+      .then((response) => response.json())
+      .then((payload: { serverConfigured?: boolean }) => {
+        if (!cancelled) {
+          setServerConfigured(Boolean(payload.serverConfigured));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setServerConfigured(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -476,10 +498,8 @@ export function LumaCheckin({
 
   function handleCalendarDisconnected() {
     stopScanning();
-    setEvents([]);
-    setSelectedEventId("");
-    setAuthMode("required");
     onPreviewGuestChange(null);
+    setAuthRefreshKey((current) => current + 1);
   }
 
   if (authMode === "loading") {
@@ -491,22 +511,23 @@ export function LumaCheckin({
   }
 
   if (authMode === "required") {
-    return <ConnectLuma onConnected={handleCalendarConnected} />;
+    return (
+      <ConnectLuma
+        layout="gate"
+        serverConfigured={serverConfigured}
+        onConnected={handleCalendarConnected}
+      />
+    );
   }
 
   return (
     <div className="space-y-4">
-      {authMode === "session" ? (
-        <ConnectLuma
-          showConnectedState
-          onConnected={handleCalendarConnected}
-          onDisconnected={handleCalendarDisconnected}
-        />
-      ) : (
-        <div className="rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-          {t.luma.serverCalendarHint}
-        </div>
-      )}
+      <ConnectLuma
+        layout="settings"
+        serverConfigured={serverConfigured}
+        onConnected={handleCalendarConnected}
+        onDisconnected={handleCalendarDisconnected}
+      />
       <div className="rounded-2xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 p-4">
         <div className="mb-3">
           <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t.luma.title}</p>
