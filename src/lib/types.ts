@@ -3,7 +3,7 @@ import { DEFAULT_PHOTO_FRAME_OFFSET } from "./photo-image";
 
 export type PaperWidth = 58 | 80;
 
-export type TicketMode = "event" | "photo" | "luma" | "credits";
+export type TicketMode = "event" | "photo" | "luma" | "credits" | "qr";
 
 export interface ReceiptData {
   businessName: string;
