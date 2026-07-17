@@ -10,6 +10,7 @@ import {
   Printer,
   QrCode,
   Save,
+  ScanQrCode,
   Ticket,
   Unplug,
 } from "lucide-react";
@@ -23,6 +24,8 @@ import { DocsFooterLink } from "@/components/DocsBackLink";
 import { LumaCheckin } from "@/components/LumaCheckin";
 import { LumaReceiptPreview } from "@/components/LumaReceiptPreview";
 import { PhotoReceiptPreview } from "@/components/PhotoReceiptPreview";
+import { QrGenerator } from "@/components/QrGenerator";
+import { QrGeneratorPreview } from "@/components/QrGeneratorPreview";
 import { ReceiptPreview } from "@/components/ReceiptPreview";
 import { useBrowserPrinter } from "@/hooks/useBrowserPrinter";
 import { useLocale } from "@/lib/i18n/locale-context";
@@ -51,6 +54,9 @@ export function PosApp() {
   const [photoTicket, setPhotoTicket] = useState<PhotoTicketData>(defaultPhotoTicketData);
   const [lumaPreviewReceipt, setLumaPreviewReceipt] = useState<LumaReceiptData | null>(null);
   const [creditsPreview, setCreditsPreview] = useState<CreditsTicketData>(defaultCreditsTicketData);
+  const [qrPreviewUrl, setQrPreviewUrl] = useState<string | null>(null);
+  const [qrPreviewSource, setQrPreviewSource] = useState("");
+  const [isQrGenerating, setIsQrGenerating] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
 
@@ -84,6 +90,15 @@ export function PosApp() {
   const handleCreditsPreviewChange = useCallback((data: CreditsTicketData) => {
     setCreditsPreview(data);
   }, []);
+
+  const handleQrPreviewChange = useCallback(
+    (data: { previewUrl: string | null; url: string; isGenerating: boolean }) => {
+      setQrPreviewUrl(data.previewUrl);
+      setQrPreviewSource(data.url);
+      setIsQrGenerating(data.isGenerating);
+    },
+    [],
+  );
 
   const handleLumaPreviewChange = useCallback((data: LumaReceiptData) => {
     setLumaPreviewReceipt(data);
@@ -125,6 +140,11 @@ export function PosApp() {
     setStatus(null);
     if (mode !== "luma") {
       setLumaPreviewReceipt(null);
+    }
+    if (mode !== "qr") {
+      setQrPreviewUrl(null);
+      setQrPreviewSource("");
+      setIsQrGenerating(false);
     }
   }, [mode]);
 
@@ -270,7 +290,7 @@ export function PosApp() {
 
       <div className="mb-8 rounded-3xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900 p-4 shadow-sm sm:p-5">
         <p className="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">{t.ticketMode.label}</p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
           <button
             type="button"
             onClick={() => setMode("event")}
@@ -318,6 +338,18 @@ export function PosApp() {
           >
             <Coins className="h-5 w-5" />
             {t.ticketMode.credits}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("qr")}
+            className={`inline-flex items-center justify-center gap-3 rounded-2xl border px-5 py-4 text-base font-semibold transition ${
+              mode === "qr"
+                ? "border-zinc-900 bg-zinc-900 text-white shadow-md"
+                : "border-zinc-200 bg-zinc-50 text-zinc-700 hover:border-zinc-300 hover:bg-white dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
+            }`}
+          >
+            <ScanQrCode className="h-5 w-5" />
+            {t.ticketMode.qr}
           </button>
         </div>
       </div>
@@ -581,13 +613,18 @@ export function PosApp() {
             onPreviewReceiptChange={handleLumaPreviewChange}
             encoderOptions={encoderOptions}
           />
-        ) : (
+        ) : mode === "credits" ? (
           <CursorCredits
             isConnected={isConnected}
             printBuffer={print}
             onStatus={setStatus}
             onPreviewChange={handleCreditsPreviewChange}
             encoderOptions={encoderOptions}
+          />
+        ) : (
+          <QrGenerator
+            onPreviewChange={handleQrPreviewChange}
+            onStatus={setStatus}
           />
         )}
 
@@ -643,8 +680,14 @@ export function PosApp() {
           <PhotoReceiptPreview data={photoTicket} />
         ) : mode === "luma" ? (
           <LumaReceiptPreview data={lumaPreviewData} />
-        ) : (
+        ) : mode === "credits" ? (
           <CreditsReceiptPreview data={creditsPreview} />
+        ) : (
+          <QrGeneratorPreview
+            previewUrl={qrPreviewUrl}
+            url={qrPreviewSource}
+            isGenerating={isQrGenerating}
+          />
         )}
       </aside>
       </div>

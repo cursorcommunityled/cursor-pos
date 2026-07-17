@@ -46,7 +46,7 @@ export type Translations = {
     repoBody: string;
     repoLinkLabel: string;
   };
-  ticketMode: { label: string; event: string; photo: string; luma: string; credits: string };
+  ticketMode: { label: string; event: string; photo: string; luma: string; credits: string; qr: string };
   app: {
     brand: string;
     title: string;
@@ -254,6 +254,22 @@ export type Translations = {
     queueCleared: string;
     previewEmpty: string;
   };
+  qrGenerator: {
+    title: string;
+    subtitle: string;
+    urlLabel: string;
+    urlPlaceholder: string;
+    sizeLabel: string;
+    hint: string;
+    download: string;
+    downloaded: string;
+    urlRequired: string;
+    generateError: string;
+    downloadError: string;
+    previewEmpty: string;
+    previewAlt: string;
+    generating: string;
+  };
 };
 
 export const translations: Record<Locale, Translations> = {
@@ -375,6 +391,7 @@ export const translations: Record<Locale, Translations> = {
       photo: "Ticket con foto",
       luma: "Check-in Luma",
       credits: "Cursor Credits",
+      qr: "Generador QR",
     },
     app: {
       brand: "Cursor POS",
@@ -601,6 +618,23 @@ export const translations: Record<Locale, Translations> = {
       queueCleared: "Cola vaciada.",
       previewEmpty: "Carga un CSV para ver la vista previa.",
     },
+    qrGenerator: {
+      title: "Generador de QR",
+      subtitle:
+        "Crea un codigo QR con cualquier link y el logo de Cursor en el centro. Descarga la imagen en PNG.",
+      urlLabel: "Link o texto",
+      urlPlaceholder: "https://luma.com/...",
+      sizeLabel: "Tamano de descarga",
+      hint: "La vista previa usa 512 px. La descarga respeta el tamano elegido. Usa correccion alta (H) para que el QR siga siendo escaneable con el logo.",
+      download: "Descargar PNG",
+      downloaded: "QR descargado.",
+      urlRequired: "Ingresa un link antes de descargar.",
+      generateError: "No se pudo generar el QR.",
+      downloadError: "No se pudo descargar el QR.",
+      previewEmpty: "Escribe un link para ver la vista previa.",
+      previewAlt: "Vista previa del QR con logo Cursor",
+      generating: "Generando QR...",
+    },
   },
   en: {
     language: { label: "Language", es: "Español", en: "English" },
@@ -720,6 +754,7 @@ export const translations: Record<Locale, Translations> = {
       photo: "Photo ticket",
       luma: "Luma check-in",
       credits: "Cursor Credits",
+      qr: "QR generator",
     },
     app: {
       brand: "Cursor POS",
@@ -943,6 +978,23 @@ export const translations: Record<Locale, Translations> = {
       queueReset: "Queue reset to the beginning.",
       queueCleared: "Queue cleared.",
       previewEmpty: "Upload a CSV to see the preview.",
+    },
+    qrGenerator: {
+      title: "QR generator",
+      subtitle:
+        "Create a QR code for any link with the Cursor logo centered. Download as PNG.",
+      urlLabel: "Link or text",
+      urlPlaceholder: "https://luma.com/...",
+      sizeLabel: "Download size",
+      hint: "Preview uses 512 px. Download uses the selected size. High error correction (H) keeps the code scannable with the logo.",
+      download: "Download PNG",
+      downloaded: "QR downloaded.",
+      urlRequired: "Enter a link before downloading.",
+      generateError: "Could not generate the QR code.",
+      downloadError: "Could not download the QR code.",
+      previewEmpty: "Enter a link to see the preview.",
+      previewAlt: "QR preview with Cursor logo",
+      generating: "Generating QR...",
     },
   },
 };
