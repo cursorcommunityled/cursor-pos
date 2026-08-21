@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const PRINTER_NAME = /^[\w .()\-]{1,200}$/;
+const POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe";
 
 function isWindows(): boolean {
   return process.platform === "win32";
@@ -16,7 +18,7 @@ export async function listPrinters(): Promise<string[]> {
     return [];
   }
 
-  const { stdout } = await execFileAsync("powershell", [
+  const { stdout } = await execFileAsync(POWERSHELL, [
     "-NoProfile",
     "-Command",
     "Get-Printer | Select-Object -ExpandProperty Name | ConvertTo-Json -Compress",
@@ -39,13 +41,17 @@ export async function printRawBuffer(
     throw new Error("La impresión directa solo está disponible en Windows.");
   }
 
+  if (!PRINTER_NAME.test(printerName)) {
+    throw new Error("Invalid printer name.");
+  }
+
   const tempFile = join(tmpdir(), `cursor-pos-${randomBytes(8).toString("hex")}.bin`);
   const scriptPath = join(process.cwd(), "scripts", "print-raw.ps1");
 
   await writeFile(tempFile, data);
 
   try {
-    await execFileAsync("powershell", [
+    await execFileAsync(POWERSHELL, [
       "-NoProfile",
       "-ExecutionPolicy",
       "Bypass",
